@@ -6,6 +6,8 @@ import Login from "../pages/Login";
 import Contact from "../pages/Contact";
 import Service from "../pages/Services";
 import signup from "../pages/signup";
+import Doctors from "../pages/Doctors/Docters";
+import Profile from "../pages/User/Profile";
 
 export const router = createBrowserRouter([
   {
@@ -45,6 +47,14 @@ export const router = createBrowserRouter([
       {
         path: "service",
         Component: Service,
+      },
+      {
+        path: "doctors",
+        Component: Doctors,
+      },
+      {
+        path: "profiles",
+        Component: Profile,
       },
     ],
   },

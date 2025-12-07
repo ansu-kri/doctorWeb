@@ -1,4 +1,5 @@
 import React from "react";
+import doctor from "../../assets/images/doctor-image04.png"
 
 const AboutSection = () => {
   return (
@@ -9,7 +10,7 @@ const AboutSection = () => {
         <div className="flex justify-center md:justify-start relative">
           <div className="w-full max-w-[420px] relative">
             <img
-              src="doctor-image.png" // Replace with your image
+              src={doctor} // Replace with your image
               alt="Doctor"
               className="rounded-2xl w-full h-auto shadow-lg"
             />
@@ -17,8 +18,8 @@ const AboutSection = () => {
             {/* Floating Card */}
             <div className="absolute -bottom-6 left-6 bg-white shadow-xl rounded-xl p-4 flex items-center gap-3 w-[230px] md:w-[260px]">
               <img
-                src="avatar.png" // Replace with your avatar
-                alt="avatar"
+                src={doctor} // Replace with your avatar
+                alt="doctor"
                 className="w-11 h-11 rounded-full"
               />
               <div>

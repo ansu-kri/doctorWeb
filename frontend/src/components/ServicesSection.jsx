@@ -1,23 +1,27 @@
 // components/ServicesSection.jsx
 import React from "react";
+import icon1 from "../assets/images/icon01.png"
+import icon2 from "../assets/images/icon02.png"
+import icon3 from "../assets/images/icon03.png"
 
 const serviceItems = [
   {
     title: "Find a Doctor",
     desc: "World-class care for everyone. Our health System offers unmatched, expert health care. From the lab to the clinic.",
-    img: "/doctor-small-1.png",
+    img: icon1,
   },
   {
     title: "Find a Location",
     desc: "World-class care for everyone. Our health System offers unmatched, expert health care. From the lab to the clinic.",
-    img: "/doctor-small-2.png",
+    img: icon2,
   },
   {
     title: "Book Appointment",
     desc: "World-class care for everyone. Our health System offers unmatched, expert health care. From the lab to the clinic.",
-    img: "/doctor-main.png",
+    img: icon3,
   },
 ];
+
 
 const ServicesSection = () => {
   return (

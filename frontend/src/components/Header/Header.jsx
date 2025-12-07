@@ -1,6 +1,7 @@
 import { NavLink, Link } from "react-router-dom";
 import { useRef } from "react";
 import { BiMenu, BiX } from "react-icons/bi";
+import logo from "../../assets/images/logo.png"
 
 const navLinks = [
   { path: "/home", display: "Home" },
@@ -25,7 +26,9 @@ const Header = () => {
           <div className="flex items-center justify-between">
 
             {/* Logo */}
-            <div className="font-bold text-xl">logo</div>
+            <div className="font-bold text-xl">
+            <img src={logo} alt="Logo" className="w-24" />
+            </div>
 
             {/* Desktop Menu */}
             <ul className="hidden md:flex items-center gap-10">

@@ -1,5 +1,8 @@
 // components/HeroSection.jsx
 import React from "react";
+import doctor from "../assets/images/hero-img01.png"
+import smallimg from "../assets/images/doctor-img05.png"
+import smallimg1 from "../assets/images/feature-img.png"
 
 const HeroSection = () => {
   return (
@@ -57,17 +60,17 @@ const HeroSection = () => {
         <div className="w-full lg:w-1/2 flex flex-col lg:flex-row items-center justify-center gap-6">
           {/* MAIN IMAGE */}
           <div className="w-[240px] h-[300px] sm:w-[260px] sm:h-[340px] lg:w-[280px] lg:h-[380px] bg-orange-300 rounded-xl shadow-lg flex items-center justify-center">
-            <img src="/doctor-main.png" className="w-[85%] h-auto object-cover" />
+            <img src={doctor} className=" h-auto object-cover" />
           </div>
 
           {/* SMALL STACKED IMAGES */}
           <div className="flex flex-row lg:flex-col gap-4 lg:gap-6 mt-2 lg:mt-6">
             <div className="w-[160px] h-[140px] sm:w-[180px] sm:h-[160px] lg:w-[200px] lg:h-[180px] bg-purple-500 rounded-xl shadow-lg flex items-center justify-center">
-              <img src="/doctor-small-1.png" className="w-[80%] h-auto object-cover" />
+              <img src={smallimg1} className=" h-auto object-cover" />
             </div>
 
-            <div className="w-[160px] h-[140px] sm:w-[180px] sm:h-[160px] lg:w-[200px] lg:h-[180px] bg-cyan-500 rounded-xl shadow-lg flex items-center justify-center">
-              <img src="/doctor-small-2.png" className="w-[80%] h-auto object-cover" />
+            <div className="w-[160px] h-[140px] sm:w-[180px] sm:h-[160px] lg:w-[200px] lg:h-[205px] bg-cyan-500 rounded-xl shadow-lg flex items-center justify-center">
+              <img src={smallimg} className="rounded-xl h-auto object-cover" />
             </div>
           </div>
         </div>
