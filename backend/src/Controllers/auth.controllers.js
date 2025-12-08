@@ -1,38 +1,56 @@
 const User = require("../Model/user");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+// const speakeasy = require("speakeasy");
+// const upload = require("../services/fileUpload");
+
 
 const signup = async (req, res) => {
-    const { fullName, email, password, areYou, gender } = req.body;
-
     try {
-        // 1. Validate required fields
+        const { fullName, email, password, areYou, gender } = req.body;
+
+        // Validate required fields
         if (!fullName || !email || !password || !areYou || !gender) {
             return res.status(400).json({ message: "All fields are required" });
         }
 
-        // 2. Check if email already exists
+        // Check if email is already taken
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ message: "Email already exists" });
         }
 
-        // 3. Create new user
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Profile Picture handling (AWS S3 or Multer)
+        const profilePicture = req.file ? req.file.location : null;
+
+        // Create user
         const newUser = await User.create({
             fullName,
             email,
-            password,  // later, hash password
+            password: hashedPassword,
             areYou,
-            gender
+            gender,
+            profilePicture
         });
 
-        // 4. Response
-        return res.status(201).json({
+        res.status(201).json({
             message: "User registered successfully",
-            user: newUser,
+            user: {
+                id: newUser._id,
+                fullName: newUser.fullName,
+                email: newUser.email,
+                areYou: newUser.areYou,
+                gender: newUser.gender,
+                profilePicture: newUser.profilePicture
+            }
         });
 
     } catch (error) {
-        console.log("Error in signup", error);
-        return res.status(500).json({ message: "Signup failed", error });
+        console.error("Signup Error:", error);
+        res.status(500).json({ message: "Signup failed", error });
     }
 };
 
@@ -57,6 +75,7 @@ const login = async (req, res) => {
             return res.status(400).json({ message: "Incorrect password" });
         }
 
+        // const isPasswordValid = await bcrypt.compare(password, employee.password);
         // 4. Success response
         return res.status(200).json({
             message: "Login successful",
@@ -70,3 +89,21 @@ const login = async (req, res) => {
 };
 
 module.exports = signup, login;
+
+
+
+    // Generate JWT token
+    // const jwtSecret = process.env.JWT_SECRET;
+    // const token = jwt.sign(
+    //   {
+    //     id: employee._id,
+    //     email: employee.email,
+    //     employeeID: employee.employeeID,
+    //     employeeName: employee.employeeName,
+    //     department: employee.department,
+    //     role: employee.isAdmin ? "admin" : employee.isItAdmin ? "itadmin" : employee.isoperationadmin ? "operationadmin" : "user",
+    //     profilePicture: employee.profilePicture,
+    //   },
+    //   jwtSecret,
+    //   { expiresIn: "3d" }
+    // );

@@ -8,6 +8,9 @@ import Service from "../pages/Services";
 import signup from "../pages/signup";
 import Doctors from "../pages/Doctors/Docters";
 import Profile from "../pages/User/Profile";
+import DoctorDetails from "../pages/Doctors/DoctorDetails";
+import CheckoutSuccess from "../pages/CheckoutSuccess";
+import AdminProfile from "../pages/Admin/AdminProfile";
 
 export const router = createBrowserRouter([
   {
@@ -53,8 +56,20 @@ export const router = createBrowserRouter([
         Component: Doctors,
       },
       {
+        path: "/doctor/:id",
+        Component: DoctorDetails,
+      },
+      {
         path: "profiles",
         Component: Profile,
+      },
+      {
+        path: "checkout-success",
+        Component: CheckoutSuccess,
+      },
+      {
+        path: "profile",
+        Component: AdminProfile,
       },
     ],
   },
