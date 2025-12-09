@@ -11,4 +11,4 @@ router.get('/logout', (req,res) =>{
     res.send("logout endpoint")
 })
 
-module.exports = router
+module.exports = router;

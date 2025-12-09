@@ -44,6 +44,7 @@ const signup = async (req, res) => {
                 email: newUser.email,
                 areYou: newUser.areYou,
                 gender: newUser.gender,
+                password: newUser.password,
                 profilePicture: newUser.profilePicture
             }
         });
