@@ -1,58 +1,73 @@
 const User = require("../Model/user");
-const jwt = require("jsonwebtoken");
+const generateToken = require("../Configs/utils")
 const bcrypt = require("bcrypt");
-// const speakeasy = require("speakeasy");
-// const upload = require("../services/fileUpload");
 
 
+// ==================== SIGNUP ====================
 const signup = async (req, res) => {
-    try {
-        const { fullName, email, password, areYou, gender } = req.body;
+    const { 
+    fullName, 
+    email, 
+    password, 
+    phone, 
+    role, 
+    gender, 
+    bloodType 
+  } = req.body;
 
-        // Validate required fields
-        if (!fullName || !email || !password || !areYou || !gender) {
-            return res.status(400).json({ message: "All fields are required" });
-        }
-
-        // Check if email is already taken
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ message: "Email already exists" });
-        }
-
-        // Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Profile Picture handling (AWS S3 or Multer)
-        const profilePicture = req.file ? req.file.location : null;
-
-        // Create user
-        const newUser = await User.create({
-            fullName,
-            email,
-            password: hashedPassword,
-            areYou,
-            gender,
-            profilePicture
-        });
-
-        res.status(201).json({
-            message: "User registered successfully",
-            user: {
-                id: newUser._id,
-                fullName: newUser.fullName,
-                email: newUser.email,
-                areYou: newUser.areYou,
-                gender: newUser.gender,
-                password: newUser.password,
-                profilePicture: newUser.profilePicture
-            }
-        });
-
-    } catch (error) {
-        console.error("Signup Error:", error);
-        res.status(500).json({ message: "Signup failed", error });
+  try {
+    // 1. Validation
+    if (!fullName || !email || !password || !phone || !role || !gender || !bloodType ) {
+      return res.status(400).json({ message: "All fields are required" });
     }
+    if (password.length < 6) {
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 6 characters" });
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: "Invalid email format" });
+    }
+
+    // 2. Check if user exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser)
+      return res.status(400).json({ message: "Email already exists" });
+
+    // 3. Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // 4. Create new user
+    const newUser = new User({
+      fullName,
+      email,
+      password: hashedPassword,
+      phone,
+      role,
+      gender,
+      bloodType,
+      profilePic: req.file ? req.file.path : undefined,
+    });
+
+    const savedUser = await newUser.save();
+
+    // 5. Generate JWT token
+    const token = generateToken(savedUser._id);
+
+    // 6. Send response
+    res.status(201).json({
+      _id: savedUser._id,
+      fullName: savedUser.fullName,
+      email: savedUser.email,
+      profilePic: savedUser.profilePic,
+      token,
+    });
+  } catch (error) {
+    console.log("Error in signup:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 

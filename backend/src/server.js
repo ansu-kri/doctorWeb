@@ -35,6 +35,10 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
+//parse urlencoded form data(need for multer)
+app.use(express.urlencoded({ extended: true}));
+//serve uploads folder statically
+app.use("/uploads", express.static("uploads"));
 
 app.use("/api", authRoutes);
 

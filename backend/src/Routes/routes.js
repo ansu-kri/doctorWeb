@@ -3,7 +3,7 @@ const Signup = require('../Controllers/auth.controllers')
 const router = express.Router();
 const upload = require("../services/upload")
 
-router.post("/signup", upload.single("profilePicture"), Signup);
+router.post("/signup", upload.single("profilePic"), Signup);
 router.get("/login", (req,res) => {
     res.send("login successful")
 })
