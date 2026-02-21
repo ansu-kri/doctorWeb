@@ -1,14 +1,10 @@
 const express = require('express');
-const Signup = require('../Controllers/auth.controllers')
+const { signup, login, logout } = require('../Controllers/auth.controllers');
 const router = express.Router();
-const upload = require("../services/upload")
+const upload = require("../services/upload");
 
-router.post("/signup", upload.single("profilePic"), Signup);
-router.get("/login", (req,res) => {
-    res.send("login successful")
-})
-router.get('/logout', (req,res) =>{
-    res.send("logout endpoint")
-})
+router.post("/signup", upload.single("profilePic"), signup);
+router.post("/login", login);
+// router.get('/logout', logout);
 
 module.exports = router;

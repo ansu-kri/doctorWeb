@@ -1,62 +1,55 @@
 const User = require("../Model/user");
-const generateToken = require("../Configs/utils")
+const generateToken = require("../Configs/utils");
 const bcrypt = require("bcrypt");
-
 
 // ==================== SIGNUP ====================
 const signup = async (req, res) => {
-    const { 
-    fullName, 
-    email, 
-    password, 
-    phone, 
-    role, 
-    gender, 
-    bloodType 
-  } = req.body;
-
   try {
-    // 1. Validation
-    if (!fullName || !email || !password || !phone || !role || !gender || !bloodType ) {
-      return res.status(400).json({ message: "All fields are required" });
+    // Extract fields from form data
+    const { fullName, email, password, role, gender, phone = "", bloodType = "" } = req.body;
+
+    // --- Validation ---
+    if (!fullName || !email || !password || !role || !gender) {
+      return res.status(400).json({ message: "All required fields must be provided" });
     }
+
     if (password.length < 6) {
-      return res
-        .status(400)
-        .json({ message: "Password must be at least 6 characters" });
+      return res.status(400).json({ message: "Password must be at least 6 characters" });
     }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({ message: "Invalid email format" });
     }
 
-    // 2. Check if user exists
+    // --- Check if user exists ---
     const existingUser = await User.findOne({ email });
-    if (existingUser)
+    if (existingUser) {
       return res.status(400).json({ message: "Email already exists" });
+    }
 
-    // 3. Hash password
+    // --- Hash password ---
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // 4. Create new user
+    // --- Create new user ---
     const newUser = new User({
       fullName,
       email,
       password: hashedPassword,
-      phone,
       role,
       gender,
+      phone,
       bloodType,
       profilePic: req.file ? req.file.path : undefined,
     });
 
     const savedUser = await newUser.save();
 
-    // 5. Generate JWT token
+    // --- Generate JWT token ---
     const token = generateToken(savedUser._id);
 
-    // 6. Send response
+    // --- Send response ---
     res.status(201).json({
       _id: savedUser._id,
       fullName: savedUser.fullName,
@@ -65,61 +58,38 @@ const signup = async (req, res) => {
       token,
     });
   } catch (error) {
-    console.log("Error in signup:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error("Error in signup:", error.message);
+    console.error(error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
 
-
+// ==================== LOGIN ====================
 const login = async (req, res) => {
+  try {
     const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ message: "All fields are required" });
 
-    try {
-        // 1. Check required fields
-        if (!email || !password) {
-            return res.status(400).json({ message: "Email and password are required" });
-        }
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
-        // 2. Check if user exists
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(400).json({ message: "User not found" });
-        }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
-        // 3. Match password (plain text – same as your signup)
-        if (password !== user.password) {
-            return res.status(400).json({ message: "Incorrect password" });
-        }
+    const token = generateToken(user._id);
 
-        // const isPasswordValid = await bcrypt.compare(password, employee.password);
-        // 4. Success response
-        return res.status(200).json({
-            message: "Login successful",
-            user,
-        });
-
-    } catch (error) {
-        console.log("Error in login", error);
-        return res.status(500).json({ message: "Login failed", error });
-    }
+    res.status(200).json({
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      profilePic: user.profilePic,
+      token,
+    });
+  } catch (error) {
+    console.error("Error in login:", error.message);
+    console.error(error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
 };
 
-module.exports = signup, login;
-
-
-
-    // Generate JWT token
-    // const jwtSecret = process.env.JWT_SECRET;
-    // const token = jwt.sign(
-    //   {
-    //     id: employee._id,
-    //     email: employee.email,
-    //     employeeID: employee.employeeID,
-    //     employeeName: employee.employeeName,
-    //     department: employee.department,
-    //     role: employee.isAdmin ? "admin" : employee.isItAdmin ? "itadmin" : employee.isoperationadmin ? "operationadmin" : "user",
-    //     profilePicture: employee.profilePicture,
-    //   },
-    //   jwtSecret,
-    //   { expiresIn: "3d" }
-    // );
+module.exports = { signup, login };

@@ -28,11 +28,17 @@ const express = require("express");
 const dotenv = require("dotenv");
 const authRoutes = require("./Routes/routes");
 const connectDB = require("./Configs/db");
+const cors = require("cors")
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+//Enable cors for all origins (or retrict to frontend origin)
+app.use(cors({origin:"http://localhost:3000", //allow only react app
+    credentials:true, //if want cookies/auth
+}))
 
 app.use(express.json());
 //parse urlencoded form data(need for multer)
