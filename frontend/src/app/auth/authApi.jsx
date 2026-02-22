@@ -22,12 +22,21 @@ export const authApi = api.injectEndpoints({
     }),
 
     // ================= LOGOUT =================
-    logout: builder.query({
+    logout: builder.mutation({
       query: () => ({
         url: '/logout',
-        method: 'GET',
+        method: 'POST',
       }),
     }),
+
+    //===============getAlldoctors============
+
+    getAlldoctors: builder.query({
+      query: () => ({
+        url: '/doctors',
+        method: 'GET',
+      })
+    })
 
   }),
 });
@@ -35,5 +44,6 @@ export const authApi = api.injectEndpoints({
 export const {
   useSignupMutation,
   useLoginMutation,
-  useLogoutQuery,
+  useLogoutMutation,
+  useGetAlldoctorsQuery,
 } = authApi;

@@ -25,7 +25,7 @@ const UserSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   fullName: { type: String, required: true },
-  // phone: { type: Number },
+  phone: { type: Number },
   profilePic: { type: String },
   role: {
     type: String,
@@ -33,7 +33,7 @@ const UserSchema = new mongoose.Schema({
     default: "patient",
   },
   gender: { type: String, enum: ["male", "female", "other"] },
-  // bloodType: { type: String },
+  bloodType: { type: String },
   // appointments: [{ type: mongoose.Types.ObjectId, ref: "Appointment" }],
 });
 

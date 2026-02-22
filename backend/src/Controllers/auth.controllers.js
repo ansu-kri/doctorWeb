@@ -54,6 +54,7 @@ const signup = async (req, res) => {
       _id: savedUser._id,
       fullName: savedUser.fullName,
       email: savedUser.email,
+      role: savedUser.role,
       profilePic: savedUser.profilePic,
       token,
     });
@@ -83,6 +84,7 @@ const login = async (req, res) => {
       fullName: user.fullName,
       email: user.email,
       profilePic: user.profilePic,
+      role: user.role,
       token,
     });
   } catch (error) {
@@ -92,4 +94,18 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { signup, login };
+// ================user logout=======================
+
+const logout  = async (req, res) =>  {
+    try{
+       return res.status(200).json({
+      success: true,
+      message: "Logged out successfully",
+    });
+    }
+    catch(error) {
+        res.status(500).json({ success: false, message: "error.message"});
+    }
+}
+
+module.exports = { signup, login, logout };

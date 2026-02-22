@@ -1,12 +1,12 @@
 
 // import Footer from '../components/Footer/Footer.jsx';
 import { Outlet } from 'react-router';
-import Header from '../components/Header/Header.jsx';
+import Navbar from '../components/Header/Navbar'
 
 const AuthenticatedLayout = () => {
   return (
     <div>
-     <Header/>
+     <Navbar/>
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* <Footer /> */}
         <div>

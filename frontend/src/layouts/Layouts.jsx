@@ -1,12 +1,12 @@
 import React from 'react'
-import Header from '../components/Header/Header.jsx';
+import Navbar from '../components/Header/Navbar.jsx'
 import Footer from '../components/Footer/Footer.jsx';
 import Routers from "../routes/routers.jsx";
 
 const Layouts = () => {
   return (
    <>
-   <Header/>
+   <Navbar/>
    <main>
     <Routers/>
    </main>
