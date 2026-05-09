@@ -13,4 +13,4 @@ const getAlldoctors = async (req, res) => {
     }
 }
 
-module.exports = getAlldoctors;
+module.exports = {getAlldoctors};

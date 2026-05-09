@@ -1,7 +1,8 @@
 const express = require("express");
 const cors = require("cors")
 const dotenv = require("dotenv");
-const authRoutes = require("./Routes/routes");
+const authRoutes = require("./Routes/auth.routes");
+const doctorsRoutes = require("./Routes/doctors.routes")
 
 const app = express();
 
@@ -34,5 +35,6 @@ app.use(express.urlencoded({ extended: true}));
 app.use("/uploads", express.static("uploads"));
 
 app.use("/api", authRoutes);
+app.use("/api", doctorsRoutes);
 
 module.exports = app;
