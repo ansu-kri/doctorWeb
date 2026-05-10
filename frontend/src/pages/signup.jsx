@@ -11,7 +11,7 @@ export default function Signup() {
     email: "",
     password: "",
     // phone: "",
-    role: "Patient",
+    role: "patient",
     gender: "",
     // bloodType: "",
   });
@@ -54,7 +54,7 @@ const handleSubmit = async (event) => {
     console.log("Signup successful:", response);
 
     // Redirect to home after signup
-    navigate("/home");
+    navigate("/login");
   } catch (error) {
     console.error("Signup failed:", error);
     // Optionally show error to user
