@@ -1,39 +1,46 @@
-import { FaCheck } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import { formatCurrency, formatDate } from "../utils/assets";
 
 const CheckoutSuccess = () => {
-  const navigate = useNavigate();
+  const appointment = useLocation().state?.appointment;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="bg-white shadow-lg rounded-xl p-10 text-center max-w-md w-full">
-
-        {/* Green Success Icon */}
-        <div className="mx-auto w-20 h-20 flex items-center justify-center bg-green-500 rounded-full text-white text-4xl">
-          <FaCheck />
-        </div>
-
-        {/* Heading */}
-        <h2 className="text-3xl font-semibold text-gray-800 mt-6">
-          Payment Done!
-        </h2>
-
-        {/* Messages */}
-        <p className="text-gray-600 mt-4">
-          Thank you for completing your secure online payment.
+    <div className="mx-auto max-w-xl px-4 py-16">
+      <Card className="p-8 text-center">
+        <p className="text-sm font-semibold text-emerald-600">
+          Booking confirmed
         </p>
-
-        <p className="text-gray-700 mt-2 font-medium">Have a great day!</p>
-
-        {/* Return Button */}
-        <button
-          onClick={() => navigate("/home")}
-          className="mt-8 w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition"
-        >
-          Go Back to Home Page
-        </button>
-
-      </div>
+        <h1 className="mt-2 text-3xl font-semibold">
+          Your visit is on the calendar
+        </h1>
+        {appointment ? (
+          <div className="mt-6 space-y-1 text-slate-600">
+            <p>{appointment.doctor?.fullName}</p>
+            <p>
+              {formatDate(appointment.appointmentDate)} at{" "}
+              {appointment.timeSlot}
+            </p>
+            <p className="capitalize">
+              {appointment.consultationType} · {appointment.status}
+            </p>
+            <p>{formatCurrency(appointment.ticketPrice)}</p>
+          </div>
+        ) : (
+          <p className="mt-4 text-slate-500">
+            Open your dashboard to see appointment status.
+          </p>
+        )}
+        <div className="mt-8 flex justify-center gap-3">
+          <Link to="/dashboard">
+            <Button>Go to dashboard</Button>
+          </Link>
+          <Link to="/doctors">
+            <Button variant="outline">Book another</Button>
+          </Link>
+        </div>
+      </Card>
     </div>
   );
 };

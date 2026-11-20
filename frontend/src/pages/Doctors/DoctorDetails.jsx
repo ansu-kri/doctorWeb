@@ -1,270 +1,178 @@
 import { useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { FaStar } from "react-icons/fa";
-import PaymentForm from "../PaymentForm";
+import { toast } from "sonner";
+import Button from "../../components/ui/Button";
+import Card from "../../components/ui/Card";
+import Skeleton from "../../components/ui/Skeleton";
+import {
+  useAddReviewMutation,
+  useGetDoctorQuery,
+} from "../../app/auth/authApi";
+import { formatCurrency, mediaUrl } from "../../utils/assets";
+import { getStoredUser } from "../../utils/auth";
+import fallback from "../../assets/images/doctor-img01.png";
 
 const DoctorDetails = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const user = getStoredUser();
+  const { data, isLoading, isError, error } = useGetDoctorQuery(id);
+  const [addReview, { isLoading: reviewing }] = useAddReviewMutation();
   const [tab, setTab] = useState("about");
-  const [showPayment, setShowPayment] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
 
-  // Feedback states
-  const [rating, setRating] = useState(0);
-  const [hover, setHover] = useState(null);
-  const [message, setMessage] = useState("");
-  const [success, setSuccess] = useState("");
+  const doctor = data?.data;
 
-  const [reviews, setReviews] = useState([
-    {
-      id: 1,
-      name: "Ahmed Ali",
-      date: "June 27, 2023",
-      review: "Good doctor, highly recommend 👍",
-      rating: 5,
-      avatar: "/doctor.png",
-    },
-    {
-      id: 2,
-      name: "Rakib",
-      date: "June 27, 2023",
-      review: "Good",
-      rating: 5,
-      avatar: "/doctor.png",
-    },
-  ]);
-
-  const handleSubmitFeedback = () => {
-    if (rating === 0) {
-      alert("Please give a rating!");
-      return;
+  const submitReview = async (e) => {
+    e.preventDefault();
+    if (!user) return navigate("/login");
+    try {
+      await addReview({ id, rating, comment }).unwrap();
+      toast.success("Review published");
+      setComment("");
+    } catch (err) {
+      toast.error(err?.data?.message || "Unable to submit review");
     }
-
-    if (message.trim() === "") {
-      alert("Please write your feedback!");
-      return;
-    }
-
-    const newFeedback = {
-      id: Date.now(),
-      name: "You",
-      date: new Date().toLocaleDateString(),
-      review: message,
-      rating,
-      avatar: "/doctor.png",
-    };
-
-    setReviews([newFeedback, ...reviews]);
-    setRating(0);
-    setMessage("");
-    setSuccess("Feedback submitted successfully!");
-
-    setTimeout(() => setSuccess(""), 3000);
   };
 
+  if (isLoading) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-10">
+        <Skeleton className="h-[480px]" />
+      </div>
+    );
+  }
+  if (isError || !doctor) {
+    return (
+      <p className="px-4 py-10 text-center text-red-600">
+        {error?.data?.message || "Doctor not found"}
+      </p>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4">
-      <div className="max-w-6xl mx-auto grid lg:grid-cols-12 gap-10">
-
-        {/* PAYMENT SCREEN */}
-        {showPayment && (
-          <div className="lg:col-span-12">
-            <PaymentForm onClose={() => setShowPayment(false)} />
+    <div className="mx-auto max-w-7xl px-4 py-10">
+      <div className="grid gap-8 lg:grid-cols-12">
+        <Card className="p-6 lg:col-span-8">
+          <div className="flex flex-col gap-6 sm:flex-row">
+            <img
+              src={mediaUrl(doctor.profilePic) || fallback}
+              alt={doctor.fullName}
+              className="h-44 w-44 rounded-2xl object-cover"
+            />
+            <div>
+              <span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-[#2563EB]">
+                {doctor.specialization}
+              </span>
+              <h1 className="mt-3 text-3xl font-semibold">{doctor.fullName}</h1>
+              <p className="mt-1 flex items-center gap-2 text-slate-600">
+                <FaStar className="text-amber-500" />
+                {doctor.averageRating || "New"} ({doctor.totalRating || 0}{" "}
+                reviews)
+              </p>
+              <p className="mt-2 text-slate-500">
+                {doctor.hospital} · {doctor.location}
+              </p>
+              <p className="mt-3 max-w-xl text-slate-600">{doctor.bio}</p>
+            </div>
           </div>
-        )}
 
-        {/* MAIN PAGE (shown only when payment is hidden) */}
-        {!showPayment && (
-          <>
-            {/* LEFT CONTENT */}
-            <div className="lg:col-span-8 bg-white p-6 rounded-lg shadow">
+          <div className="mt-8 flex gap-6 border-b">
+            {["about", "reviews"].map((item) => (
+              <button
+                key={item}
+                onClick={() => setTab(item)}
+                className={`pb-3 capitalize ${tab === item ? "border-b-2 border-[#2563EB] font-semibold text-[#2563EB]" : "text-slate-500"}`}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
 
-              {/* Doctor Header */}
-              <div className="flex items-center gap-6">
-                <img
-                  src="/doctor.png"
-                  alt="doctor"
-                  className="w-32 h-32 rounded-lg object-cover"
-                />
-
-                <div>
-                  <span className="px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-sm">
-                    neurologist
-                  </span>
-
-                  <h2 className="text-2xl font-semibold mt-2">
-                    Dr. Muhibur Rahman
-                  </h2>
-
-                  <div className="flex items-center gap-2 text-yellow-500 text-sm">
-                    <FaStar />
-                    <span className="text-gray-700">5 (2)</span>
-                  </div>
-
-                  <p className="text-sm text-gray-500">
-                    Specialization in Neurologist
-                  </p>
-                </div>
-              </div>
-
-              {/* Tabs */}
-              <div className="flex gap-10 mt-8 border-b">
-                <button
-                  className={`pb-2 ${
-                    tab === "about"
-                      ? "border-b-2 border-teal-600 text-teal-600 font-medium"
-                      : "text-gray-500"
-                  }`}
-                  onClick={() => setTab("about")}
-                >
-                  About
-                </button>
-
-                <button
-                  className={`pb-2 ${
-                    tab === "feedback"
-                      ? "border-b-2 border-teal-600 text-teal-600 font-medium"
-                      : "text-gray-500"
-                  }`}
-                  onClick={() => setTab("feedback")}
-                >
-                  Feedback
-                </button>
-              </div>
-
-              {/* ABOUT TAB */}
-              {tab === "about" && (
-                <div className="mt-6">
-                  <h3 className="text-lg font-semibold text-teal-700">
-                    About of Dr. Muhibur Rahman
-                  </h3>
-                  <p className="text-gray-600 mt-3 leading-relaxed">
-                    Lorem Ipsum is simply dummy text...
-                  </p>
-
-                  <div className="mt-6">
-                    <h3 className="text-lg font-semibold mb-3">Education</h3>
-
-                    <div className="flex justify-between border-b py-3">
-                      <span className="text-blue-600 font-medium">2006–2010</span>
-                      <span className="text-gray-700">BSc degree in Neurosciences</span>
-                      <span className="text-gray-500">New Apollo Hospital</span>
-                    </div>
-
-                    <div className="flex justify-between border-b py-3">
-                      <span className="text-blue-600 font-medium">2010–2014</span>
-                      <span className="text-gray-700">MBBS in Neurology</span>
-                      <span className="text-gray-500">Dhaka Medical College</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* FEEDBACK TAB */}
-              {tab === "feedback" && (
-                <div className="mt-6">
-                  {success && (
-                    <p className="bg-green-100 text-green-700 px-4 py-2 rounded mb-4 text-sm">
-                      {success}
-                    </p>
-                  )}
-
-                  <h3 className="text-xl font-semibold text-gray-700 mb-4">
-                    All Reviews ({reviews.length})
-                  </h3>
-
-                  <div className="space-y-6">
-                    {reviews.map((item) => (
-                      <div key={item.id} className="flex justify-between items-start">
-                        <div className="flex gap-3">
-                          <img
-                            src={item.avatar}
-                            alt="avatar"
-                            className="w-10 h-10 rounded-full"
-                          />
-
-                          <div>
-                            <p className="font-semibold text-gray-800">{item.name}</p>
-                            <p className="text-xs text-gray-500">{item.date}</p>
-                            <p className="mt-1 text-gray-700">{item.review}</p>
-                          </div>
-                        </div>
-
-                        <div className="text-yellow-500">{`★`.repeat(item.rating)}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-10">
-                    <p className="font-medium text-gray-700">
-                      How would you rate the overall experience?*
-                    </p>
-
-                    <div className="flex gap-2 mt-2">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <FaStar
-                          key={star}
-                          size={28}
-                          className={`cursor-pointer ${
-                            (hover || rating) >= star
-                              ? "text-yellow-500"
-                              : "text-gray-300"
-                          }`}
-                          onMouseEnter={() => setHover(star)}
-                          onMouseLeave={() => setHover(null)}
-                          onClick={() => setRating(star)}
-                        />
-                      ))}
-                    </div>
-
-                    <div className="mt-6">
-                      <p className="font-medium text-gray-700">
-                        Share your feedback or suggestions*
-                      </p>
-
-                      <textarea
-                        className="w-full mt-2 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                        rows="4"
-                        placeholder="Write your message"
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                      ></textarea>
-                    </div>
-
-                    <button
-                      onClick={handleSubmitFeedback}
-                      className="mt-6 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700"
-                    >
-                      Submit Feedback
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* RIGHT SIDEBAR */}
-            <div className="lg:col-span-4">
-              <div className="bg-white shadow p-6 rounded-lg">
-                <h3 className="text-gray-700 font-medium">Ticket Price</h3>
-                <p className="text-2xl font-semibold text-teal-600 mt-1">1000 BDT</p>
-
-                <h4 className="mt-5 text-gray-700 font-medium">
-                  Available Time Slots:
-                </h4>
-
-                <ul className="mt-3 text-gray-600 space-y-1">
-                  <li>Saturday: 5:30 pm - 8:50 pm</li>
-                  <li>Monday: 10:00 am - 3:00 pm</li>
-                  <li>Wednesday: 5:00 pm - 9:30 pm</li>
+          {tab === "about" && (
+            <div className="mt-6 space-y-6">
+              <p className="leading-7 text-slate-600">{doctor.about}</p>
+              <div>
+                <h3 className="font-semibold">Qualifications</h3>
+                <ul className="mt-2 list-disc pl-5 text-slate-600">
+                  {(doctor.qualifications || []).map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
                 </ul>
-
-                <button
-                  className="mt-6 w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700"
-                  onClick={() => setShowPayment(true)}
-                >
-                  Book Appointment
-                </button>
+              </div>
+              <div>
+                <h3 className="font-semibold">Experience</h3>
+                <ul className="mt-2 list-disc pl-5 text-slate-600">
+                  {(doctor.experiences || []).map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
               </div>
             </div>
-          </>
-        )}
+          )}
+
+          {tab === "reviews" && (
+            <div className="mt-6 space-y-6">
+              {(doctor.reviews || []).length === 0 && (
+                <p className="text-slate-500">No reviews yet.</p>
+              )}
+              {(doctor.reviews || []).map((review) => (
+                <div
+                  key={review._id}
+                  className="border-b border-slate-100 pb-4"
+                >
+                  <p className="font-medium">{review.user?.fullName}</p>
+                  <p className="text-amber-500">{"★".repeat(review.rating)}</p>
+                  <p className="text-slate-600">{review.comment}</p>
+                </div>
+              ))}
+              <form onSubmit={submitReview} className="space-y-3">
+                <select
+                  className="rounded-xl border px-4 py-3"
+                  value={rating}
+                  onChange={(e) => setRating(e.target.value)}
+                >
+                  {[5, 4, 3, 2, 1].map((n) => (
+                    <option key={n} value={n}>
+                      {n} stars
+                    </option>
+                  ))}
+                </select>
+                <textarea
+                  required
+                  rows="4"
+                  className="w-full rounded-xl border px-4 py-3"
+                  placeholder="Share how the visit went"
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                />
+                <Button type="submit" disabled={reviewing}>
+                  {reviewing ? "Submitting..." : "Submit review"}
+                </Button>
+              </form>
+            </div>
+          )}
+        </Card>
+
+        <Card className="h-fit p-6 lg:col-span-4">
+          <p className="text-sm text-slate-500">Consultation fee</p>
+          <p className="text-3xl font-semibold text-[#2563EB]">
+            {formatCurrency(doctor.ticketPrice)}
+          </p>
+          <p className="mt-4 text-sm font-medium">Weekly availability</p>
+          <ul className="mt-2 space-y-1 text-sm text-slate-600">
+            {(doctor.timeSlots || []).map((slot, i) => (
+              <li key={`${slot.day}-${i}`}>
+                {slot.day}: {slot.startTime} – {slot.endTime}
+              </li>
+            ))}
+          </ul>
+          <Link to={`/book/${doctor._id}`}>
+            <Button className="mt-6 w-full">Book appointment</Button>
+          </Link>
+        </Card>
       </div>
     </div>
   );

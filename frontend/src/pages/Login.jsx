@@ -1,100 +1,86 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Navbar from "../components/Header/Navbar";
-import { useLoginMutation } from "../app/auth/authApi" // adjust path
+import { toast } from "sonner";
+import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import Field, { inputClass } from "../components/ui/Field";
+import { useLoginMutation } from "../app/auth/authApi";
+import { saveSession } from "../utils/auth";
 
 const LoginPage = () => {
   const navigate = useNavigate();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  const [login, { isLoading, isError, error, isSuccess }] =
-    useLoginMutation();
+  const [show, setShow] = useState(false);
+  const [login, { isLoading }] = useLoginMutation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!email || !password) {
-      alert("Please fill all fields");
+      toast.error("Enter email and password");
       return;
     }
-
     try {
       const response = await login({ email, password }).unwrap();
-
-      console.log("Login Success:", response);
-
-      // ✅ Optional: store token if backend sends it
-      if (response?.token) {
-        localStorage.setItem("token", response.token);
-      }
-
-      // ✅ Redirect after login
-      navigate("/home"); // change route if needed
-
+      saveSession(response);
+      toast.success("Welcome back");
+      if (response.role === "admin") navigate("/admin");
+      else navigate("/dashboard");
     } catch (err) {
-      console.error("Login Failed:", err);
+      toast.error(err?.data?.message || "Login failed");
     }
   };
 
   return (
-    <div className="w-full min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <Navbar />
-
-      <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
-          Hello! <span className="text-blue-600">Welcome Back</span> 👋
-        </h2>
-
-        <form onSubmit={handleSubmit}>
-          {/* Email */}
-          <div className="mb-5">
-            <label className="text-gray-600 text-sm">Enter Your Email</label>
+    <div className="flex min-h-[70vh] items-center justify-center px-4 py-12">
+      <Card className="w-full max-w-md p-8">
+        <h1 className="text-2xl font-semibold">Welcome back</h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Sign in to manage appointments and records.
+        </p>
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          <Field label="Email">
             <input
               type="email"
+              className={inputClass}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full border-b border-gray-300 focus:border-blue-500 outline-none py-1 mt-1"
             />
-          </div>
-
-          {/* Password */}
-          <div className="mb-6">
-            <label className="text-gray-600 text-sm">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full border-b border-gray-300 focus:border-blue-500 outline-none py-1 mt-1"
-            />
-          </div>
-
-          {/* Error Message */}
-          {isError && (
-            <p className="text-red-500 text-sm mb-3">
-              {error?.data?.message || "Login failed. Try again."}
-            </p>
-          )}
-
-          {/* Login Button */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition disabled:bg-gray-400"
-          >
-            {isLoading ? "Logging in..." : "Login"}
-          </button>
+          </Field>
+          <Field label="Password">
+            <div className="relative">
+              <input
+                type={show ? "text" : "password"}
+                className={inputClass}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-3 text-slate-500"
+                onClick={() => setShow(!show)}
+                aria-label="Toggle password"
+              >
+                {show ? (
+                  <AiOutlineEyeInvisible size={20} />
+                ) : (
+                  <AiOutlineEye size={20} />
+                )}
+              </button>
+            </div>
+          </Field>
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Signing in..." : "Login"}
+          </Button>
         </form>
-
-        {/* Register Link */}
-        <p className="text-center mt-4 text-sm text-gray-600">
-          Don’t have an account?{" "}
-          <Link to="/signup" className="text-blue-600 hover:underline">
-            Register
+        <p className="mt-4 text-center text-sm text-slate-500">
+          New to Medicare?{" "}
+          <Link to="/signup" className="font-semibold text-[#2563EB]">
+            Create an account
           </Link>
         </p>
-      </div>
+      </Card>
     </div>
   );
 };

@@ -1,40 +1,47 @@
 const express = require("express");
-const cors = require("cors")
-const dotenv = require("dotenv");
+const cors = require("cors");
+const path = require("path");
 const authRoutes = require("./Routes/auth.routes");
-const doctorsRoutes = require("./Routes/doctors.routes")
+const doctorsRoutes = require("./Routes/doctors.routes");
+const bookingRoutes = require("./Routes/booking.routes");
+const catalogRoutes = require("./Routes/catalog.routes");
+const adminRoutes = require("./Routes/admin.routes");
+const errorHandler = require("./middleware/error.middleware");
 
 const app = express();
 
-//CORS configuation (Production safe)
-const allowedOrigins =[
-    "http://localhost:3000", //local dev
-    process.env.FRONTEND_URL, // production frontend
-];
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  process.env.FRONTEND_URL,
+].filter(Boolean);
 
 app.use(
-    cors({
+  cors({
     origin: function (origin, callback) {
-      // allow requests with no origin (like Postman)
       if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      } else {
-        return callback(new Error("Not allowed by CORS"));
-      }
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
   })
 );
 
 app.use(express.json());
-//parse urlencoded form data(need for multer)
-app.use(express.urlencoded({ extended: true}));
-//serve uploads folder statically
-app.use("/uploads", express.static("uploads"));
+app.use(express.urlencoded({ extended: true }));
+app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
+
+app.get("/api/health", (req, res) => {
+  res.json({ ok: true });
+});
 
 app.use("/api", authRoutes);
 app.use("/api", doctorsRoutes);
+app.use("/api", bookingRoutes);
+app.use("/api", catalogRoutes);
+app.use("/api/admin", adminRoutes);
+
+app.use(errorHandler);
 
 module.exports = app;

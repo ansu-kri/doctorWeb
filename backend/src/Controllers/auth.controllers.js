@@ -2,16 +2,41 @@ const User = require("../Model/user");
 const generateToken = require("../Configs/utils");
 const bcrypt = require("bcrypt");
 
-// ==================== SIGNUP ====================
+const publicUser = (user) => ({
+  _id: user._id,
+  fullName: user.fullName,
+  email: user.email,
+  role: user.role,
+  profilePic: user.profilePic,
+  gender: user.gender,
+  phone: user.phone,
+  bloodType: user.bloodType,
+  specialization: user.specialization,
+  qualifications: user.qualifications,
+  experiences: user.experiences,
+  bio: user.bio,
+  about: user.about,
+  ticketPrice: user.ticketPrice,
+  timeSlots: user.timeSlots,
+  location: user.location,
+  hospital: user.hospital,
+  averageRating: user.averageRating,
+  totalRating: user.totalRating,
+  isApproved: user.isApproved,
+  isAvailable: user.isAvailable,
+  medicalHistory: user.medicalHistory,
+});
+
 const signup = async (req, res) => {
   try {
-    // Extract fields from form data
     const { fullName, email, password, role, gender, phone = "", bloodType = "" } = req.body;
 
-    // --- Validation ---
-    if (!fullName || !email || !password || !role || !gender) {
+    if (!fullName || !email || !password || !gender) {
       return res.status(400).json({ message: "All required fields must be provided" });
     }
+
+    const allowedRoles = ["patient", "doctors"];
+    const safeRole = allowedRoles.includes(role) ? role : "patient";
 
     if (password.length < 6) {
       return res.status(400).json({ message: "Password must be at least 6 characters" });
@@ -22,56 +47,46 @@ const signup = async (req, res) => {
       return res.status(400).json({ message: "Invalid email format" });
     }
 
-    // --- Check if user exists ---
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return res.status(400).json({ message: "Email already exists" });
     }
 
-    // --- Hash password ---
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // --- Create new user ---
     const newUser = new User({
       fullName,
-      email,
+      email: email.toLowerCase(),
       password: hashedPassword,
-      role,
+      role: safeRole,
       gender,
       phone,
       bloodType,
-      profilePic: req.file ? req.file.path : undefined,
+      profilePic: req.file ? req.file.path.replace(/\\/g, "/") : "",
+      isApproved: safeRole === "doctors" ? "pending" : "approved",
     });
 
     const savedUser = await newUser.save();
-
-    // --- Generate JWT token ---
     const token = generateToken(savedUser._id);
 
-    // --- Send response ---
     res.status(201).json({
-      _id: savedUser._id,
-      fullName: savedUser.fullName,
-      email: savedUser.email,
-      role: savedUser.role,
-      profilePic: savedUser.profilePic,
+      ...publicUser(savedUser),
       token,
     });
   } catch (error) {
     console.error("Error in signup:", error.message);
-    console.error(error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
-// ==================== LOGIN ====================
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ message: "All fields are required" });
+    if (!email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -80,32 +95,80 @@ const login = async (req, res) => {
     const token = generateToken(user._id);
 
     res.status(200).json({
-      _id: user._id,
-      fullName: user.fullName,
-      email: user.email,
-      profilePic: user.profilePic,
-      role: user.role,
+      ...publicUser(user),
       token,
     });
   } catch (error) {
     console.error("Error in login:", error.message);
-    console.error(error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
-// ================user logout=======================
+const logout = async (req, res) => {
+  return res.status(200).json({
+    success: true,
+    message: "Logged out successfully",
+  });
+};
 
-const logout  = async (req, res) =>  {
-    try{
-       return res.status(200).json({
-      success: true,
-      message: "Logged out successfully",
+const getMe = async (req, res) => {
+  res.status(200).json({ success: true, data: publicUser(req.user) });
+};
+
+const updateMe = async (req, res) => {
+  try {
+    const allowed = [
+      "fullName",
+      "phone",
+      "gender",
+      "bloodType",
+      "bio",
+      "about",
+      "location",
+      "hospital",
+      "specialization",
+      "qualifications",
+      "experiences",
+      "ticketPrice",
+      "timeSlots",
+      "isAvailable",
+      "medicalHistory",
+    ];
+
+    const updates = {};
+    allowed.forEach((key) => {
+      if (req.body[key] !== undefined) updates[key] = req.body[key];
     });
-    }
-    catch(error) {
-        res.status(500).json({ success: false, message: "error.message"});
-    }
-}
 
-module.exports = { signup, login, logout };
+    if (req.file) {
+      updates.profilePic = req.file.path.replace(/\\/g, "/");
+    }
+
+    if (updates.ticketPrice !== undefined) {
+      updates.ticketPrice = Number(updates.ticketPrice);
+    }
+
+    ["qualifications", "experiences", "timeSlots", "medicalHistory"].forEach((field) => {
+      if (typeof updates[field] === "string") {
+        try {
+          updates[field] = JSON.parse(updates[field]);
+        } catch {
+          if (field !== "timeSlots" && field !== "medicalHistory") {
+            updates[field] = updates[field].split(",").map((v) => v.trim()).filter(Boolean);
+          }
+        }
+      }
+    });
+
+    const user = await User.findByIdAndUpdate(req.user._id, updates, {
+      new: true,
+      runValidators: true,
+    }).select("-password");
+
+    res.status(200).json({ success: true, data: publicUser(user) });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { signup, login, logout, getMe, updateMe, publicUser };

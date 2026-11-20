@@ -1,103 +1,128 @@
-import { NavLink, Link } from "react-router-dom";
-import { useRef } from "react";
+import { useEffect, useState } from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { BiMenu, BiX } from "react-icons/bi";
-import logo from "../../assets/images/logo.png"
+import { toast } from "sonner";
+import logo from "../../assets/images/logo.png";
+import Button from "../ui/Button";
+import { clearSession, getStoredUser } from "../../utils/auth";
+import { useLogoutMutation } from "../../app/auth/authApi";
 
-const navLinks = [
-  { path: "/home", display: "Home" },
+const publicLinks = [
+  { path: "/", display: "Home" },
   { path: "/doctors", display: "Find a Doctor" },
-  { path: "/service", display: "Services" },
+  { path: "/services", display: "Services" },
   { path: "/contact", display: "Contact" },
 ];
 
 const Header = () => {
-  const menuRef = useRef(null);
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const [user, setUser] = useState(getStoredUser());
+  const [logout] = useLogoutMutation();
 
-  const toggleMenu = () => {
-    menuRef.current.classList.toggle("right-0");
-    menuRef.current.classList.toggle("right-[-100%]");
+  useEffect(() => {
+    const sync = () => setUser(getStoredUser());
+    window.addEventListener("medicare-auth", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("medicare-auth", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
+
+  const dashboardPath = user?.role === "admin" ? "/admin" : "/dashboard";
+
+  const handleLogout = async () => {
+    try {
+      await logout().unwrap();
+    } catch {
+      /* client-side logout still proceeds */
+    }
+    clearSession();
+    toast.success("You have been signed out");
+    navigate("/");
   };
 
   return (
     <>
-      {/* FIXED NAVBAR */}
-      <header className="w-full h-[80px] fixed top-0 left-0 z-50 bg-white shadow-md flex items-center">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between">
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-100 bg-white/95 backdrop-blur">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4">
+          <Link to="/" className="flex items-center gap-2">
+            <img src={logo} alt="Medicare" className="h-10 w-auto" />
+            {/* <span className="text-lg font-bold text-slate-900">Medicare</span> */}
+          </Link>
 
-            {/* Logo */}
-            <div className="font-bold text-xl">
-            <img src={logo} alt="Logo" className="w-24" />
-            </div>
+          <nav className="hidden items-center gap-8 md:flex">
+            {publicLinks.map((link) => (
+              <NavLink
+                key={link.path}
+                to={link.path}
+                end={link.path === "/"}
+                className={({ isActive }) =>
+                  `text-sm font-medium transition ${isActive ? "text-[#2563EB]" : "text-slate-600 hover:text-[#2563EB]"}`
+                }
+              >
+                {link.display}
+              </NavLink>
+            ))}
+          </nav>
 
-            {/* Desktop Menu */}
-            <ul className="hidden md:flex items-center gap-10">
-              {navLinks.map((link, index) => (
-                <li key={index}>
-                  <NavLink
-                    to={link.path}
-                    className={({ isActive }) =>
-                      isActive
-                        ? "text-black font-bold"
-                        : "text-black hover:text-red-500"
-                    }
-                  >
-                    {link.display}
-                  </NavLink>
-                </li>
-              ))}
-            </ul>
-
-            {/* Login + Menu Icon */}
-            <div className="flex items-center gap-4">
-              <Link to="/login">
-                <button className="bg-blue-500 px-6 py-2 font-semibold rounded-full text-white cursor-pointer">
-                  Login
-                </button>
-              </Link>
-
-              {/* Mobile Toggle Button */}
-              <span className="block md:hidden" onClick={toggleMenu}>
-                <BiMenu className="w-7 h-7 cursor-pointer" />
-              </span>
-            </div>
+          <div className="hidden items-center gap-3 md:flex">
+            {user ? (
+              <>
+                <Link to={dashboardPath}>
+                  <Button variant="secondary">{user.role === "admin" ? "Admin" : "Dashboard"}</Button>
+                </Link>
+                <Button variant="outline" onClick={handleLogout}>Logout</Button>
+              </>
+            ) : (
+              <>
+                <Link to="/login"><Button variant="outline">Login</Button></Link>
+                <Link to="/signup"><Button>Register</Button></Link>
+              </>
+            )}
           </div>
-        </div>
 
-        {/* MOBILE MENU */}
-        <div
-          ref={menuRef}
-          className="
-            fixed top-0 right-[-100%]
-            w-[70%] h-full bg-white shadow-lg
-            p-8 pt-20 flex flex-col gap-6
-            transition-all duration-300 md:hidden
-          "
-        >
-          {/* Close */}
-          <button
-            className="absolute top-6 right-6 text-black"
-            onClick={toggleMenu}
-          >
-            <BiX className="w-8 h-8" />
+          <button className="md:hidden" onClick={() => setOpen(true)} aria-label="Open menu">
+            <BiMenu className="h-8 w-8" />
           </button>
-
-          {/* Links */}
-          {navLinks.map((link, index) => (
-            <NavLink
-              key={index}
-              to={link.path}
-              onClick={toggleMenu}
-              className="text-black text-lg font-medium hover:text-red-500"
-            >
-              {link.display}
-            </NavLink>
-          ))}
         </div>
       </header>
 
-      {/* FIX FOR OVERLAP → ADD SPACE BELOW NAVBAR */}
-      <div className="h-[80px]"></div>
+      {open && (
+        <div className="fixed inset-0 z-[60] bg-slate-900/40 md:hidden" onClick={() => setOpen(false)}>
+          <aside
+            className="absolute right-0 top-0 h-full w-[80%] max-w-xs bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-8 flex items-center justify-between">
+              <span className="font-semibold">Menu</span>
+              <button onClick={() => setOpen(false)} aria-label="Close menu">
+                <BiX className="h-8 w-8" />
+              </button>
+            </div>
+            <div className="flex flex-col gap-4">
+              {publicLinks.map((link) => (
+                <NavLink key={link.path} to={link.path} onClick={() => setOpen(false)} className="text-slate-700">
+                  {link.display}
+                </NavLink>
+              ))}
+              {user ? (
+                <>
+                  <Link to={dashboardPath} onClick={() => setOpen(false)}>Dashboard</Link>
+                  <Button onClick={handleLogout}>Logout</Button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login" onClick={() => setOpen(false)}><Button variant="outline" className="w-full">Login</Button></Link>
+                  <Link to="/signup" onClick={() => setOpen(false)}><Button className="w-full">Register</Button></Link>
+                </>
+              )}
+            </div>
+          </aside>
+        </div>
+      )}
+      <div className="h-20" />
     </>
   );
 };

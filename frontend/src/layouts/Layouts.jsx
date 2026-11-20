@@ -1,18 +1,15 @@
-import React from 'react'
-import Navbar from '../components/Header/Navbar.jsx'
-import Footer from '../components/Footer/Footer.jsx';
-import Routers from "../routes/routers.jsx";
+import { Outlet } from "react-router-dom";
+import Navbar from "../components/Header/Navbar";
+import Footer from "../components/Footer/Footer";
 
-const Layouts = () => {
-  return (
-   <>
-   <Navbar/>
-   <main>
-    <Routers/>
-   </main>
-   <Footer/>
-   </>
-  )
-}
+const PublicLayout = () => (
+  <div className="min-h-screen bg-[#f8fafc]">
+    <Navbar />
+    <main className="page-enter">
+      <Outlet />
+    </main>
+    <Footer />
+  </div>
+);
 
-export default Layouts
+export default PublicLayout;
