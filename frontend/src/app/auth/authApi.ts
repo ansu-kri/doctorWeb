@@ -83,6 +83,8 @@ export interface Stats {
   patients?: number;
   doctors?: number;
   appointments?: number;
+  satisfaction?: number;
+  years?: number;
   trend?: Array<{ _id: string; count: number }>;
   status?: Record<string, number>;
 }

@@ -33,6 +33,27 @@ export default function Signup() {
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm({ ...form, [e.target.name]: e.target.value });
+  
+  const getErrorMessage = (
+  error: unknown,
+  fallback = "Something went wrong",
+): string => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "object" && error !== null && "data" in error) {
+    const data = error.data;
+    if (
+      typeof data === "object" &&
+      data !== null &&
+      "message" in data &&
+      typeof data.message === "string"
+    ) {
+      return data.message;
+    }
+  }
+  return fallback;
+};
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -48,8 +69,8 @@ export default function Signup() {
       saveSession(response);
       toast.success("Account created");
       navigate("/dashboard");
-    } catch (error) {
-      toast.error(error?.data?.message || "Signup failed");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
     }
   };
 

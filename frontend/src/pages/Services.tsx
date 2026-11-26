@@ -6,7 +6,7 @@ import { useGetServicesQuery } from "../app/auth/authApi";
 interface Service {
   _id: string;
   name: string;
-  description: string;
+  description?: string;
   category?: string;
 }
 

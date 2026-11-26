@@ -17,6 +17,26 @@ interface Errors {
   subject?: string;
   message?: string;
 }
+const getErrorMessage = (
+  error: unknown,
+  fallback = "Something went wrong",
+): string => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "object" && error !== null && "data" in error) {
+    const data = error.data;
+    if (
+      typeof data === "object" &&
+      data !== null &&
+      "message" in data &&
+      typeof data.message === "string"
+    ) {
+      return data.message;
+    }
+  }
+  return fallback;
+};
 
 const Contact = () => {
   const [form, setForm] = useState<ContactForm>({
@@ -45,8 +65,8 @@ const Contact = () => {
       await sendContact(form).unwrap();
       toast.success("Message sent. Our team will reply shortly.");
       setForm({ name: "", email: "", subject: "", message: "" });
-    } catch (err) {
-      toast.error(err?.data?.message || "Unable to send message");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err));
     }
   };
 
@@ -105,7 +125,7 @@ const Contact = () => {
             <Field label="Message" error={errors.message}>
               <textarea
                 required
-                rows="6"
+                rows={6}
                 className={inputClass}
                 value={form.message}
                 onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>

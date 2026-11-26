@@ -1,6 +1,17 @@
-import { useMemo, useState, ChangeEvent, FormEvent } from "react";
+import {
+  useMemo,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+  type ComponentType,
+} from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaUserMd, FaHeartbeat, FaHospital, FaQuoteLeft } from "react-icons/fa";
+import {
+  FaUserMd,
+  FaHeartbeat,
+  FaHospital,
+  FaQuoteLeft,
+} from "react-icons/fa";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import DoctorCard from "../components/doctors/DoctorCard";
@@ -11,6 +22,7 @@ import {
   useGetServicesQuery,
   useGetSpecialtiesQuery,
 } from "../app/auth/authApi";
+
 import hero from "../assets/images/hero-img01.png";
 import doctor2 from "../assets/images/doctor-img05.png";
 import feature from "../assets/images/feature-img.png";
@@ -21,38 +33,113 @@ interface QueryState {
   specialization: string;
   location: string;
 }
-
+interface Stats {
+  doctors: number;
+  patients: number;
+  satisfaction: number;
+  years: number;
+}
+interface Feature {
+  Icon: ComponentType<{ className?: string }>;
+  text: string;
+}
+interface Statistic {
+  value: string;
+  label: string;
+}
 const Home = () => {
   const navigate = useNavigate();
+
   const [query, setQuery] = useState<QueryState>({
     search: "",
     specialization: "",
     location: "",
   });
+
+  // API Queries
   const { data: doctorsData, isLoading: doctorsLoading } =
     useGetAlldoctorsQuery();
   const { data: specialtiesData } = useGetSpecialtiesQuery();
   const { data: servicesData } = useGetServicesQuery();
   const { data: statsData } = useGetPublicStatsQuery();
-
+  // API Data
   const doctors = doctorsData?.data || [];
   const specialties = specialtiesData?.data || [];
   const services = (servicesData?.data || []).slice(0, 6);
-  const stats = statsData?.data || {
-    doctors: 0,
-    patients: 0,
-    satisfaction: 98,
-    years: 12,
+
+  // Statistics
+  const stats: Stats = {
+    doctors: statsData?.data?.doctors ?? 0,
+    patients: statsData?.data?.patients ?? 0,
+    satisfaction: statsData?.data?.satisfaction ?? 98,
+    years: statsData?.data?.years ?? 12,
   };
 
+  // Featured Doctors
   const featured = useMemo(() => doctors.slice(0, 3), [doctors]);
 
-  const searchDoctors = (e: FormEvent) => {
+  // Search Doctors
+  const searchDoctors = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const params = new URLSearchParams();
-    Object.entries(query).forEach(([k, v]) => v && params.set(k, v));
+    Object.entries(query).forEach(([key, value]) => {
+      if (value) {
+        params.set(key, value);
+      }
+    });
     navigate(`/doctors?${params.toString()}`);
   };
+  // Statistics Data
+  const statistics: Statistic[] = [
+    {
+      value: `${stats.years}+`,
+      label: "Years of care",
+    },
+    {
+      value: `${stats.doctors}+`,
+      label: "Specialists",
+    },
+    {
+      value: `${stats.satisfaction}%`,
+      label: "Patient trust",
+    },
+  ];
+  // Why Choose Medicare Features
+  const features: Feature[] = [
+    {
+      Icon: FaUserMd,
+      text: "Verified specialists with transparent fees and live availability.",
+    },
+    {
+      Icon: FaHeartbeat,
+      text: "Continuity of care across clinic visits and online follow-ups.",
+    },
+    {
+      Icon: FaHospital,
+      text: "Coordinated diagnostics, referrals, and appointment records.",
+    },
+  ];
+  // Patient Testimonials
+  const testimonials = [
+    {
+      name: "Neha Kapoor",
+      tag: "Cardiology",
+      quote:
+        "Booking took two minutes and Dr. Sharma explained my reports without rushing.",
+    },
+    {
+      name: "Imran Ali",
+      tag: "Neurology",
+      quote:
+        "I rescheduled from the dashboard when traffic hit. The new slot was confirmed immediately.",
+    },
+    {
+      name: "Leela Menon",
+      tag: "Pediatrics",
+      quote:
+        "The pediatric visit felt calm, and vaccination dates now live in my history.",
+    },
+  ];
 
   return (
     <div>
@@ -67,9 +154,9 @@ const Home = () => {
               stick.
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-8 text-slate-600">
-              Medicare connects you with verified specialists for in-person and
-              online consultations. Search by specialty, compare fees, and book
-              a real slot in minutes.
+              Medicare connects you with verified specialists for in-person
+              and online consultations. Search by specialty, compare fees, and
+              book a real slot in minutes.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link to="/doctors">
@@ -80,13 +167,11 @@ const Home = () => {
               </Link>
             </div>
             <div className="mt-12 grid grid-cols-3 gap-6">
-              {[
-                [stats.years + "+", "Years of care"],
-                [stats.doctors + "+", "Specialists"],
-                [stats.satisfaction + "%", "Patient trust"],
-              ].map(([value, label]) => (
+              {statistics.map(({ value, label }) => (
                 <div key={label}>
-                  <p className="text-3xl font-bold text-slate-900">{value}</p>
+                  <p className="text-3xl font-bold text-slate-900">
+                    {value}
+                  </p>
                   <div className="mt-1 h-1 w-12 rounded bg-[#2563EB]" />
                   <p className="mt-2 text-sm text-slate-500">{label}</p>
                 </div>
@@ -114,21 +199,29 @@ const Home = () => {
           </div>
         </div>
       </section>
-
       <section className="mx-auto max-w-7xl px-4">
         <Card className="-mt-6 p-6">
-          <form onSubmit={searchDoctors} className="grid gap-3 md:grid-cols-4">
+          <form
+            onSubmit={searchDoctors}
+            className="grid gap-3 md:grid-cols-4"
+          >
             <input
               className="rounded-xl border border-slate-200 px-4 py-3"
               placeholder="Doctor name"
               value={query.search}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setQuery({ ...query, search: e.target.value })}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setQuery({ ...query, search: e.target.value })
+              }
             />
             <select
               className="rounded-xl border border-slate-200 px-4 py-3"
               value={query.specialization}
               onChange={(e: ChangeEvent<HTMLSelectElement>) =>
-                setQuery({ ...query, specialization: e.target.value })}
+                setQuery({
+                  ...query,
+                  specialization: e.target.value,
+                })
+              }
             >
               <option value="">All specialties</option>
               {specialties.map((item) => (
@@ -141,13 +234,14 @@ const Home = () => {
               className="rounded-xl border border-slate-200 px-4 py-3"
               placeholder="City or clinic"
               value={query.location}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setQuery({ ...query, location: e.target.value })}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setQuery({ ...query, location: e.target.value })
+              }
             />
             <Button type="submit">Search doctors</Button>
           </form>
         </Card>
       </section>
-
       <section className="mx-auto max-w-7xl px-4 py-16">
         <div className="mb-10 text-center">
           <h2 className="text-3xl font-semibold">Popular specialties</h2>
@@ -162,7 +256,9 @@ const Home = () => {
               to={`/doctors?specialization=${encodeURIComponent(item.name)}`}
             >
               <Card className="h-full p-5 transition hover:border-blue-200">
-                <h3 className="font-semibold text-slate-900">{item.name}</h3>
+                <h3 className="font-semibold text-slate-900">
+                  {item.name}
+                </h3>
                 <p className="mt-2 text-sm text-slate-500">
                   {item.description}
                 </p>
@@ -171,7 +267,6 @@ const Home = () => {
           ))}
         </div>
       </section>
-
       <section className="bg-white py-16">
         <div className="mx-auto max-w-7xl px-4">
           <div className="mb-10 flex items-end justify-between">
@@ -190,14 +285,15 @@ const Home = () => {
           </div>
           <div className="grid gap-6 md:grid-cols-3">
             {doctorsLoading
-              ? [1, 2, 3].map((n) => <Skeleton key={n} className="h-96" />)
+              ? [1, 2, 3].map((n) => (
+                  <Skeleton key={n} className="h-96" />
+                ))
               : featured.map((doctor) => (
                   <DoctorCard key={doctor._id} doctor={doctor} />
                 ))}
           </div>
         </div>
       </section>
-
       <section className="mx-auto max-w-7xl px-4 py-16">
         <h2 className="text-center text-3xl font-semibold">
           Healthcare services
@@ -206,6 +302,7 @@ const Home = () => {
           {services.map((service) => (
             <Card key={service._id} className="p-6">
               <h3 className="text-lg font-semibold">{service.name}</h3>
+
               <p className="mt-2 text-sm text-slate-500">
                 {service.description}
               </p>
@@ -213,7 +310,6 @@ const Home = () => {
           ))}
         </div>
       </section>
-
       <section className="bg-white py-16">
         <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 md:grid-cols-2">
           <img
@@ -226,20 +322,7 @@ const Home = () => {
               Why patients choose Medicare
             </h2>
             <div className="mt-6 space-y-4">
-              {[
-                [
-                  FaUserMd,
-                  "Verified specialists with transparent fees and live availability.",
-                ],
-                [
-                  FaHeartbeat,
-                  "Continuity of care across clinic visits and online follow-ups.",
-                ],
-                [
-                  FaHospital,
-                  "Coordinated diagnostics, referrals, and appointment records.",
-                ],
-              ].map(([Icon, text]) => (
+              {features.map(({ Icon, text }) => (
                 <div key={text} className="flex gap-3">
                   <Icon className="mt-1 text-[#2563EB]" />
                   <p className="text-slate-600">{text}</p>
@@ -249,29 +332,12 @@ const Home = () => {
           </div>
         </div>
       </section>
-
       <section className="mx-auto max-w-7xl px-4 py-16">
         <h2 className="text-center text-3xl font-semibold">
           What patients say
         </h2>
         <div className="mt-10 grid gap-5 md:grid-cols-3">
-          {[
-            [
-              "Neha Kapoor",
-              "Cardiology",
-              "Booking took two minutes and Dr. Sharma explained my reports without rushing.",
-            ],
-            [
-              "Imran Ali",
-              "Neurology",
-              "I rescheduled from the dashboard when traffic hit. The new slot was confirmed immediately.",
-            ],
-            [
-              "Leela Menon",
-              "Pediatrics",
-              "The pediatric visit felt calm, and vaccination dates now live in my history.",
-            ],
-          ].map(([name, tag, quote]) => (
+          {testimonials.map(({ name, tag, quote }) => (
             <Card key={name} className="p-6">
               <FaQuoteLeft className="text-blue-200" />
               <p className="mt-4 text-slate-600">{quote}</p>
@@ -281,7 +347,6 @@ const Home = () => {
           ))}
         </div>
       </section>
-
       <section className="px-4 pb-16">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-6 rounded-3xl bg-[#2563EB] px-8 py-10 text-white md:flex-row md:items-center">
           <div>
