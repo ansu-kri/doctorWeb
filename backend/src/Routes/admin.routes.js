@@ -2,14 +2,15 @@ const express = require("express");
 const router = express.Router();
 const { protect } = require("../middleware/auth.middleware");
 const { permit } = require("../middleware/role.middleware");
+const { upload, validateImageContent } = require("../services/upload");
 const admin = require("../Controllers/admin.controllers");
 
 router.use(protect, permit("admin"));
 
 router.get("/stats", admin.dashboard);
 router.get("/users", admin.listUsers);
-router.post("/users", admin.createUser);
-router.patch("/users/:id", admin.updateUser);
+router.post("/users", upload.single("profilePic"), validateImageContent, admin.createUser);
+router.patch("/users/:id", upload.single("profilePic"), validateImageContent, admin.updateUser);
 router.delete("/users/:id", admin.deleteUser);
 
 router.get("/appointments", admin.listAppointments);

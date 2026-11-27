@@ -1,5 +1,8 @@
+import { mediaUrl } from "../../utils/assets";
+
 interface Profile {
-  photo: string;
+  photo?: string;
+  profilePic?: string;
   name: string;
 }
 
@@ -7,7 +10,7 @@ const ProfileHeader = ({ profile }: { profile: Profile }) => {
   return (
     <div className="flex items-center gap-4">
       <img
-        src={profile.photo}
+        src={mediaUrl(profile.profilePic ?? profile.photo)}
         alt="profile"
         className="w-24 h-24 rounded-xl object-cover shadow"
       />

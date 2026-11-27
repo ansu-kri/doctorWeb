@@ -35,7 +35,9 @@ const getAlldoctors = async (req, res) => {
       ];
     }
 
-    const doctors = await User.find(query).select("-password").sort({ averageRating: -1 });
+    const doctors = await User.find(query)
+      .select("-password -profilePicPublicId")
+      .sort({ averageRating: -1 });
     res.status(200).json({ success: true, count: doctors.length, data: doctors });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -47,7 +49,7 @@ const getDoctorById = async (req, res) => {
     const doctor = await User.findOne({
       _id: req.params.id,
       role: { $in: ["doctor", "doctors"] },
-    }).select("-password");
+    }).select("-password -profilePicPublicId");
 
     if (!doctor) {
       return res.status(404).json({ message: "Doctor not found" });

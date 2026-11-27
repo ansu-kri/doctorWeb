@@ -5,8 +5,10 @@ import { toast } from "sonner";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
 import Field, { inputClass } from "../../components/ui/Field";
+import ProfileImageUpload from "../../components/ProfileImageUpload";
 import Skeleton from "../../components/ui/Skeleton";
 import { useGetMeQuery, useUpdateMeMutation } from "../../app/auth/authApi";
+import { getToken, saveSession } from "../../utils/auth";
 
 interface AccountForm {
   fullName: string;
@@ -80,6 +82,13 @@ const AdminAccount = () => {
         </h1>
       </div>
       <Card className="max-w-3xl p-5 sm:p-8">
+        <ProfileImageUpload
+          profilePic={user.profilePic}
+          onUploaded={(updated) =>
+            saveSession({ ...updated, token: getToken() ?? undefined })
+          }
+        />
+        <div className="my-6 border-t border-slate-100" />
         {isSettings ? (
           <form onSubmit={submit} className="space-y-5">
             <Field label="Full name">

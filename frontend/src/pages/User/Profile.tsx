@@ -6,6 +6,7 @@ import Card from "../../components/ui/Card";
 import EmptyState from "../../components/ui/EmptyState";
 import Field, { inputClass } from "../../components/ui/Field";
 import Modal from "../../components/ui/Modal";
+import ProfileImageUpload from "../../components/ProfileImageUpload";
 import Skeleton from "../../components/ui/Skeleton";
 import {
   useGetAppointmentsQuery,
@@ -29,6 +30,7 @@ interface User {
   _id?: string;
   fullName?: string;
   email?: string;
+  profilePic?: string;
   phone?: string;
   bloodType?: string;
   gender?: string;
@@ -406,54 +408,62 @@ const PatientDashboard = () => {
         onClose={() => setSettings(null)}
       >
         {settings && (
-          <form onSubmit={saveSettings} className="space-y-3">
-            <Field label="Full name">
-              <input
-                className={inputClass}
-                value={settings.fullName}
-                onChange={(e) =>
-                  setSettings({ ...settings, fullName: e.target.value })
-                }
-              />
-            </Field>
-            <Field label="Phone">
-              <input
-                className={inputClass}
-                value={settings.phone}
-                onChange={(e) =>
-                  setSettings({ ...settings, phone: e.target.value })
-                }
-              />
-            </Field>
-            <Field label="Blood type">
-              <input
-                className={inputClass}
-                value={settings.bloodType}
-                onChange={(e) =>
-                  setSettings({ ...settings, bloodType: e.target.value })
-                }
-              />
-            </Field>
-            <Field label="Gender">
-              <select
-                className={inputClass}
-                value={settings.gender}
-                onChange={(e) =>
-                  setSettings({
-                    ...settings,
-                    gender: e.target.value,
-                  })
-                }
-              >
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-              </select>
-            </Field>
-            <Button type="submit" disabled={saving}>
-              {saving ? "Saving..." : "Save changes"}
-            </Button>
-          </form>
+          <div className="space-y-5">
+            <ProfileImageUpload
+              profilePic={user?.profilePic}
+              onUploaded={(updated) =>
+                saveSession({ ...updated, token: getToken() ?? undefined })
+              }
+            />
+            <form onSubmit={saveSettings} className="space-y-3">
+              <Field label="Full name">
+                <input
+                  className={inputClass}
+                  value={settings.fullName}
+                  onChange={(e) =>
+                    setSettings({ ...settings, fullName: e.target.value })
+                  }
+                />
+              </Field>
+              <Field label="Phone">
+                <input
+                  className={inputClass}
+                  value={settings.phone}
+                  onChange={(e) =>
+                    setSettings({ ...settings, phone: e.target.value })
+                  }
+                />
+              </Field>
+              <Field label="Blood type">
+                <input
+                  className={inputClass}
+                  value={settings.bloodType}
+                  onChange={(e) =>
+                    setSettings({ ...settings, bloodType: e.target.value })
+                  }
+                />
+              </Field>
+              <Field label="Gender">
+                <select
+                  className={inputClass}
+                  value={settings.gender}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      gender: e.target.value,
+                    })
+                  }
+                >
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </Field>
+              <Button type="submit" disabled={saving}>
+                {saving ? "Saving..." : "Save changes"}
+              </Button>
+            </form>
+          </div>
         )}
       </Modal>
     </div>

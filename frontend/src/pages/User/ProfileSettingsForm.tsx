@@ -1,9 +1,11 @@
 import { useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
+import ProfileImageUpload from "../../components/ProfileImageUpload";
 
 interface User {
   [key: string]: unknown;
   photo?: string;
+  profilePic?: string;
   name?: string;
   email?: string;
   password?: string;
@@ -13,13 +15,8 @@ interface User {
 
 const ProfileSettingsForm = ({ user, onUpdate }: { user: User; onUpdate: (data: User) => void }) => {
   const [formData, setFormData] = useState(user);
-  const [preview, setPreview] = useState(user.photo);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    if (e.target.name === "photo") {
-      const file = (e.target as HTMLInputElement).files?.[0] ?? null;
-      if (file) setPreview(URL.createObjectURL(file));
-    }
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -73,23 +70,10 @@ const ProfileSettingsForm = ({ user, onUpdate }: { user: User; onUpdate: (data: 
         </select>
       </div>
 
-      <div className="flex items-center gap-4">
-        <img
-          src={preview}
-          alt="preview"
-          className="w-14 h-14 rounded-full border"
-        />
-
-        <label className="cursor-pointer bg-gray-200 px-4 py-2 rounded text-sm">
-          Upload Photo
-          <input
-            type="file"
-            name="photo"
-            className="hidden"
-            onChange={handleChange}
-          />
-        </label>
-      </div>
+      <ProfileImageUpload
+        profilePic={user.profilePic ?? user.photo}
+        onUploaded={onUpdate}
+      />
 
       <button
         type="submit"

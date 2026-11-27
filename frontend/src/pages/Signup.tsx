@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -7,6 +7,8 @@ import Button from "../components/ui/Button";
 import Field, { inputClass } from "../components/ui/Field";
 import { useSignupMutation } from "../app/auth/authApi";
 import { saveSession } from "../utils/auth";
+import { uploadFormDataWithProgress, validateImageFile } from "../utils/imageUpload";
+import type { AuthResponse } from "../app/auth/authApi";
 
 interface SignupForm {
   fullName: string;
@@ -31,6 +33,15 @@ export default function Signup() {
   });
   const [profilePic, setProfilePic] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(
+    () => () => {
+      if (preview.startsWith("blob:")) URL.revokeObjectURL(preview);
+    },
+    [preview],
+  );
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -66,14 +77,36 @@ export default function Signup() {
     Object.entries(form).forEach(([k, v]) => payload.append(k, v));
     if (profilePic) payload.append("profilePic", profilePic);
     try {
-      const response = await signup(payload).unwrap();
+      setSubmitting(true);
+      const response = profilePic
+        ? await uploadFormDataWithProgress<AuthResponse>(
+            "/api/signup",
+            payload,
+            setUploadProgress,
+          )
+        : await signup(payload).unwrap();
       saveSession(response);
       toast.success("Account created");
       if (form.role === "patient") navigate("/dashboard");
       else navigate("/doctor/dashboard");
     } catch (error: unknown) {
       toast.error(getErrorMessage(error));
+    } finally {
+      setSubmitting(false);
     }
+  };
+
+  const handleProfilePic = (file: File | undefined) => {
+    if (!file) return;
+    const validationError = validateImageFile(file);
+    if (validationError) {
+      toast.error(validationError);
+      setProfilePic(null);
+      setPreview("");
+      return;
+    }
+    setProfilePic(file);
+    setPreview(URL.createObjectURL(file));
   };
 
   return (
@@ -180,17 +213,32 @@ export default function Signup() {
               <input
                 hidden
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                disabled={submitting || isLoading}
                 onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                  const file = e.target.files?.[0] ?? null;
-                  setProfilePic(file);
-                  if (file) setPreview(URL.createObjectURL(file));
+                  handleProfilePic(e.target.files?.[0]);
+                  e.target.value = "";
                 }}
               />
             </label>
           </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Creating..." : "Sign up"}
+          {submitting && profilePic && (
+            <div
+              className="h-2 overflow-hidden rounded-full bg-slate-100"
+              role="progressbar"
+              aria-label="Profile photo upload progress"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={uploadProgress}
+            >
+              <div
+                className="h-full rounded-full bg-[#2563EB] transition-[width]"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
+          )}
+          <Button type="submit" className="w-full" disabled={isLoading || submitting}>
+            {isLoading || submitting ? "Creating..." : "Sign up"}
           </Button>
           <p className="text-center text-sm text-slate-500">
             Already registered?{" "}

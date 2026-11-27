@@ -1,6 +1,7 @@
 const User = require("../Model/user");
 const generateToken = require("../Configs/utils");
 const bcrypt = require("bcrypt");
+const { setProfileImage, removeProfileImage } = require("../services/profile-image");
 
 const publicUser = (user) => ({
   _id: user._id,
@@ -64,11 +65,14 @@ const signup = async (req, res) => {
       gender,
       phone,
       bloodType,
-      profilePic: req.file ? req.file.path.replace(/\\/g, "/") : "",
+      profilePic: "",
+      profilePicPublicId: "",
       isApproved: safeRole === "doctor" ? "pending" : "approved",
     });
 
-    const savedUser = await newUser.save();
+    if (req.file) await setProfileImage(newUser, req.file);
+    else await newUser.save();
+    const savedUser = newUser;
     const token = generateToken(savedUser._id);
 
     res.status(201).json({
@@ -143,10 +147,6 @@ const updateMe = async (req, res) => {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
     });
 
-    if (req.file) {
-      updates.profilePic = req.file.path.replace(/\\/g, "/");
-    }
-
     if (updates.ticketPrice !== undefined) {
       updates.ticketPrice = Number(updates.ticketPrice);
     }
@@ -163,15 +163,44 @@ const updateMe = async (req, res) => {
       }
     });
 
-    const user = await User.findByIdAndUpdate(req.user._id, updates, {
-      new: true,
-      runValidators: true,
-    }).select("-password");
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    Object.assign(user, updates);
+    const cleanupWarning = req.file
+      ? await setProfileImage(user, req.file)
+      : (await user.save(), null);
 
-    res.status(200).json({ success: true, data: publicUser(user) });
+    res.status(200).json({
+      success: true,
+      data: publicUser(user),
+      ...(cleanupWarning ? { warning: cleanupWarning } : {}),
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-module.exports = { signup, login, logout, getMe, updateMe, publicUser };
+const deleteMeProfileImage = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    const cleanupWarning = await removeProfileImage(user);
+    res.status(200).json({
+      success: true,
+      data: publicUser(user),
+      ...(cleanupWarning ? { warning: cleanupWarning } : {}),
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = {
+  signup,
+  login,
+  logout,
+  getMe,
+  updateMe,
+  deleteMeProfileImage,
+  publicUser,
+};

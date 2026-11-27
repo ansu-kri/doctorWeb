@@ -159,8 +159,9 @@ const AdminDashboard = () => {
     }
     try {
       if (userModal._id) {
-        await updateUser({ id: userModal._id, ...userModal }).unwrap();
-        toast.success("User updated");
+        const response = await updateUser({ id: userModal._id, ...userModal }).unwrap();
+        if (response.warning) toast.warning(response.warning);
+        else toast.success("User updated");
       } else {
         await createUser(userModal).unwrap();
         toast.success("User created");
@@ -188,8 +189,9 @@ const AdminDashboard = () => {
     setConfirmAction({
       label: `Delete ${String(user.fullName || "this user")} and associated appointments? This cannot be undone.`,
       run: async () => {
-        await deleteUser(user._id as string).unwrap();
-        toast.success("User deleted");
+        const response = await deleteUser(user._id as string).unwrap();
+        if (response.warning) toast.warning(response.warning);
+        else toast.success("User deleted");
       },
     });
   };

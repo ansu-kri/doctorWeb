@@ -4,6 +4,8 @@ const Specialty = require("../Model/Specialty");
 const Service = require("../Model/Service");
 const bcrypt = require("bcrypt");
 const { publicUser } = require("./auth.controllers");
+const { setProfileImage } = require("../services/profile-image");
+const { deleteFromCloudinary } = require("../Configs/cloudinary");
 
 const dashboard = async (req, res) => {
   try {
@@ -113,7 +115,7 @@ const createUser = async (req, res) => {
 
     const hashed = await bcrypt.hash(password, 10);
     const normalizedRole = role === "doctors" ? "doctor" : role;
-    const user = await User.create({
+    const user = new User({
       fullName: fullName.trim(),
       email: normalizedEmail,
       password: hashed,
@@ -132,6 +134,8 @@ const createUser = async (req, res) => {
       isActive: true,
       isApproved: normalizedRole === "doctor" ? "approved" : "approved",
     });
+    if (req.file) await setProfileImage(user, req.file);
+    else await user.save();
     res.status(201).json({ success: true, data: publicUser(user) });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -145,6 +149,8 @@ const updateUser = async (req, res) => {
     delete updates._id;
     delete updates.createdAt;
     delete updates.updatedAt;
+    delete updates.profilePic;
+    delete updates.profilePicPublicId;
     if (updates.role === "doctors") updates.role = "doctor";
     if (updates.role && !["patient", "doctor", "admin"].includes(updates.role)) {
       return res.status(400).json({ message: "Invalid role" });
@@ -164,12 +170,17 @@ const updateUser = async (req, res) => {
       updates.password = await bcrypt.hash(req.body.password, 10);
     }
     if (updates.ticketPrice !== undefined) updates.ticketPrice = Number(updates.ticketPrice);
-    const user = await User.findByIdAndUpdate(req.params.id, updates, {
-      new: true,
-      runValidators: true,
-    }).select("-password");
+    const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ message: "User not found" });
-    res.status(200).json({ success: true, data: user });
+    Object.assign(user, updates);
+    const cleanupWarning = req.file
+      ? await setProfileImage(user, req.file)
+      : (await user.save(), null);
+    res.status(200).json({
+      success: true,
+      data: publicUser(user),
+      ...(cleanupWarning ? { warning: cleanupWarning } : {}),
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -186,7 +197,16 @@ const deleteUser = async (req, res) => {
       $or: [{ user: user._id }, { doctor: user._id }],
     });
     await User.findByIdAndDelete(req.params.id);
-    res.status(200).json({ success: true });
+    let warning;
+    if (user.profilePicPublicId) {
+      try {
+        await deleteFromCloudinary(user.profilePicPublicId);
+      } catch (error) {
+        console.error("Could not clean up profile image for deleted user:", error.message);
+        warning = "User deleted, but their Cloudinary profile image could not be removed.";
+      }
+    }
+    res.status(200).json({ success: true, ...(warning ? { warning } : {}) });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

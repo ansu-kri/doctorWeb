@@ -1,7 +1,10 @@
 
+import { mediaUrl } from "../../utils/assets";
+
 interface User {
   [key: string]: unknown;
   photo?: string;
+  profilePic?: string;
   name?: string;
   email?: string;
   bloodType?: string;
@@ -18,7 +21,7 @@ const ProfileSidebar = ({ user, onLogout, onDelete }: ProfileSidebarProps) => {
     <div className="flex flex-col items-center gap-4 w-full text-center">
 
       <img
-        src={user.photo || ""}
+        src={mediaUrl(user.profilePic ?? user.photo)}
         alt="User Avatar"
         className="w-24 h-24 rounded-full border"
       />

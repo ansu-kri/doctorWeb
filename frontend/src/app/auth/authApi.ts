@@ -86,6 +86,8 @@ export interface User {
   email?: string;
   role?: string;
   phone?: string;
+  profilePic?: string;
+  profilePicPublicId?: string;
   bloodType?: string;
   gender?: string;
   photo?: string;
@@ -98,6 +100,12 @@ export interface User {
   experiences?: string[];
   isAvailable?: boolean;
   isActive?: boolean;
+}
+
+interface AdminUserMutationResponse {
+  success: boolean;
+  data?: User;
+  warning?: string;
 }
 
 export interface Stats {
@@ -185,6 +193,13 @@ export const authApi = api.injectEndpoints({
         method: "PATCH",
         body,
       }),
+      invalidatesTags: ["Auth"],
+    }),
+    deleteMeProfileImage: builder.mutation<
+      { success: boolean; data: User; warning?: string },
+      void
+    >({
+      query: () => ({ url: "/api/me/profile-image", method: "DELETE" }),
       invalidatesTags: ["Auth"],
     }),
     getAlldoctors: builder.query<{ data: Doctor[] }, PaginationParams | void>({
@@ -277,12 +292,12 @@ export const authApi = api.injectEndpoints({
       }),
       providesTags: ["Admin"],
     }),
-    createAdminUser: builder.mutation<void, Partial<User>>({
+    createAdminUser: builder.mutation<AdminUserMutationResponse, Partial<User>>({
       query: (body) => ({ url: "/api/admin/users", method: "POST", body }),
       invalidatesTags: ["Admin", "Doctors"],
     }),
     updateAdminUser: builder.mutation<
-      void,
+      AdminUserMutationResponse,
       { id: string; [key: string]: unknown }
     >({
       query: ({ id, ...body }) => ({
@@ -292,7 +307,7 @@ export const authApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Admin", "Doctors"],
     }),
-    deleteAdminUser: builder.mutation<void, string>({
+    deleteAdminUser: builder.mutation<AdminUserMutationResponse, string>({
       query: (id) => ({ url: `/api/admin/users/${id}`, method: "DELETE" }),
       invalidatesTags: ["Admin", "Doctors"],
     }),
@@ -369,6 +384,7 @@ export const {
   useLogoutMutation,
   useGetMeQuery,
   useUpdateMeMutation,
+  useDeleteMeProfileImageMutation,
   useGetAlldoctorsQuery,
   useGetDoctorQuery,
   useGetAvailabilityQuery,

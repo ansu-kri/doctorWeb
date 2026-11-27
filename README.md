@@ -47,7 +47,19 @@ RESTful API architecture
 
 MVC folder structure
 
-Secure file uploads (uploads folder)
+Profile image uploads use the backend Cloudinary configuration. New uploads are
+validated in memory and stored as Cloudinary URLs with their `public_id`;
+Cloudinary credentials must remain in the backend environment and must never be
+copied into frontend variables.
+
+Existing images in `backend/uploads` are retained and served read-only for
+backward compatibility. The migration preview checks both legacy user and
+doctor profile references. Preview the legacy image migration first by running
+`node scripts/migrate-profile-images.js` from `backend`. After reviewing the
+counts, run `node scripts/migrate-profile-images.js --apply` to upload eligible
+images and update references. The script does not delete local files; remove
+them only after the migrated records and deployed image URLs have been verified
+and backed up.
 
 Environment-based configuration
 
