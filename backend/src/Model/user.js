@@ -9,9 +9,10 @@ const UserSchema = new mongoose.Schema(
     profilePic: { type: String, default: "" },
     role: {
       type: String,
-      enum: ["patient", "admin", "doctors"],
+      enum: ["patient", "admin", "doctor", "doctors"],
       default: "patient",
     },
+    isActive: { type: Boolean, default: true },
     gender: { type: String, enum: ["male", "female", "other", ""], default: "" },
     bloodType: { type: String, default: "" },
     specialization: { type: String, default: "" },

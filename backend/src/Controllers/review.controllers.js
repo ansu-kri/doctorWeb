@@ -11,7 +11,10 @@ const addReview = async (req, res) => {
       return res.status(400).json({ message: "Rating and comment are required" });
     }
 
-    const doctor = await User.findOne({ _id: doctorId, role: "doctors" });
+    const doctor = await User.findOne({
+      _id: doctorId,
+      role: { $in: ["doctor", "doctors"] },
+    });
     if (!doctor) return res.status(404).json({ message: "Doctor not found" });
 
     const visited = await Booking.findOne({

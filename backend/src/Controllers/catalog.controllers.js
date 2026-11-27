@@ -15,7 +15,7 @@ const getServices = async (req, res) => {
 
 const getStats = async (req, res) => {
   const [doctors, patients] = await Promise.all([
-    User.countDocuments({ role: "doctors", isApproved: { $ne: "cancelled" } }),
+    User.countDocuments({ role: { $in: ["doctor", "doctors"] }, isApproved: { $ne: "cancelled" }, isActive: { $ne: false } }),
     User.countDocuments({ role: "patient" }),
   ]);
   res.status(200).json({
@@ -23,8 +23,6 @@ const getStats = async (req, res) => {
     data: {
       doctors,
       patients,
-      satisfaction: 98,
-      years: 12,
     },
   });
 };

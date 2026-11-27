@@ -4,7 +4,7 @@ const Review = require("../Model/ReviewSchema");
 const { publicUser } = require("./auth.controllers");
 const { generateSlotsForDate, startOfDay } = require("../utils/slots");
 
-const doctorFilter = { role: "doctors", isApproved: { $ne: "cancelled" } };
+const doctorFilter = { role: { $in: ["doctor", "doctors"] }, isApproved: { $ne: "cancelled" }, isActive: { $ne: false } };
 
 const getAlldoctors = async (req, res) => {
   try {
@@ -46,7 +46,7 @@ const getDoctorById = async (req, res) => {
   try {
     const doctor = await User.findOne({
       _id: req.params.id,
-      role: "doctors",
+      role: { $in: ["doctor", "doctors"] },
     }).select("-password");
 
     if (!doctor) {
@@ -68,7 +68,10 @@ const getAvailability = async (req, res) => {
     const { date } = req.query;
     if (!date) return res.status(400).json({ message: "Date is required" });
 
-    const doctor = await User.findOne({ _id: req.params.id, role: "doctors" });
+    const doctor = await User.findOne({
+      _id: req.params.id,
+      role: { $in: ["doctor", "doctors"] },
+    });
     if (!doctor) return res.status(404).json({ message: "Doctor not found" });
 
     const requested = startOfDay(date);

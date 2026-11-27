@@ -1,4 +1,5 @@
-import { useMemo, useState, ChangeEvent, FormEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
+import type { ChangeEvent, FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import DoctorCard from "../../components/doctors/DoctorCard";
 import Skeleton from "../../components/ui/Skeleton";
@@ -17,6 +18,7 @@ interface DoctorFilterForm {
 }
 
 interface QueryParams {
+  [key: string]: string | number | undefined;
   search?: string;
   specialization?: string;
   location?: string;
@@ -25,6 +27,8 @@ interface QueryParams {
 
 const Doctors = () => {
   const [params, setParams] = useSearchParams();
+  const [page, setPage] = useState(1);
+  const pageSize = 6;
   const [form, setForm] = useState<DoctorFilterForm>({
     search: params.get("search") || "",
     specialization: params.get("specialization") || "",
@@ -42,10 +46,15 @@ const Doctors = () => {
     [params]
   );
 
-  const { data, isLoading, isError, error } = useGetAlldoctorsQuery(query);
+  const { data, isLoading, isError, error, refetch } = useGetAlldoctorsQuery(query);
   const { data: specialtiesData } = useGetSpecialtiesQuery();
   const doctors = data?.data || [];
   const specialties = specialtiesData?.data || [];
+
+  useEffect(() => setPage(1), [params]);
+
+  const pageCount = Math.ceil(doctors.length / pageSize);
+  const visibleDoctors = doctors.slice((page - 1) * pageSize, page * pageSize);
 
   const apply = (e: FormEvent) => {
     e.preventDefault();
@@ -122,9 +131,22 @@ const Doctors = () => {
         </div>
       )}
       {isError && (
-        <p className="mt-8 text-red-600">
-          {error?.data?.message || "Unable to load doctors"}
-        </p>
+        <div className="mt-8 rounded-xl border border-red-100 bg-red-50 p-5 text-center">
+          <p className="text-red-700">
+            {typeof error === "object" &&
+            error !== null &&
+            "data" in error &&
+            typeof error.data === "object" &&
+            error.data !== null &&
+            "message" in error.data &&
+            typeof error.data.message === "string"
+              ? error.data.message
+              : "Unable to load doctors"}
+          </p>
+          <Button className="mt-4" variant="outline" onClick={() => refetch()}>
+            Retry
+          </Button>
+        </div>
       )}
       {!isLoading && !isError && doctors.length === 0 && (
         <div className="mt-8">
@@ -135,10 +157,31 @@ const Doctors = () => {
         </div>
       )}
       <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {doctors.map((doctor) => (
+        {visibleDoctors.map((doctor) => (
           <DoctorCard key={doctor._id} doctor={doctor} />
         ))}
       </div>
+      {!isLoading && !isError && pageCount > 1 && (
+        <div className="mt-8 flex items-center justify-center gap-3">
+          <Button
+            variant="outline"
+            disabled={page === 1}
+            onClick={() => setPage((current) => Math.max(1, current - 1))}
+          >
+            Previous
+          </Button>
+          <span className="text-sm text-slate-500">
+            Page {page} of {pageCount}
+          </span>
+          <Button
+            variant="outline"
+            disabled={page === pageCount}
+            onClick={() => setPage((current) => Math.min(pageCount, current + 1))}
+          >
+            Next
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

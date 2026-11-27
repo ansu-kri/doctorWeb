@@ -1,5 +1,6 @@
-import { useState, ChangeEvent, FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import type { ChangeEvent, FormEvent } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import Button from "../components/ui/Button";
@@ -10,6 +11,7 @@ import { saveSession } from "../utils/auth";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
@@ -32,8 +34,11 @@ const LoginPage = () => {
 
     if (response.role === "admin") {
       navigate("/admin");
+    } else if (response.role === "doctor" || response.role === "doctors") {
+      navigate("/doctor/dashboard");
     } else {
-      navigate("/dashboard");
+      const state = location.state as { from?: string } | null;
+      navigate(state?.from && state.from.startsWith("/book") ? state.from : "/dashboard");
     }
   } catch (err: unknown) {
     const error = err as {

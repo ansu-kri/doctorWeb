@@ -31,7 +31,7 @@ const createAppointment = async (req, res) => {
       return res.status(400).json({ message: "Missing required booking fields" });
     }
 
-    const doctor = await User.findOne({ _id: doctorId, role: "doctors" });
+    const doctor = await User.findOne({ _id: doctorId, role: { $in: ["doctor", "doctors"] } });
     if (!doctor) return res.status(404).json({ message: "Doctor not found" });
     if (!doctor.isAvailable) {
       return res.status(400).json({ message: "Doctor is not currently available" });
@@ -86,7 +86,9 @@ const createAppointment = async (req, res) => {
 const myAppointments = async (req, res) => {
   try {
     const filter =
-      req.user.role === "doctors" ? { doctor: req.user._id } : { user: req.user._id };
+      req.user.role === "doctor" || req.user.role === "doctors"
+        ? { doctor: req.user._id }
+        : { user: req.user._id };
 
     const items = await Booking.find(filter)
       .populate("doctor", "-password")

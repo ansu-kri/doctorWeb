@@ -1,5 +1,6 @@
-import { useState, ChangeEvent, FormEvent } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useState } from "react";
+import type { ChangeEvent, FormEvent } from "react";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { FaStar } from "react-icons/fa";
 import { toast } from "sonner";
 import Button from "../../components/ui/Button";
@@ -43,6 +44,7 @@ interface Doctor {
   ticketPrice?: number | string;
   profilePic?: string;
   bio?: string;
+  about?: string;
   qualifications?: string[];
   experiences?: string[];
   timeSlots?: TimeSlot[];
@@ -52,8 +54,9 @@ interface Doctor {
 const DoctorDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const user = getStoredUser() as StoredUser | null;
-  const { data, isLoading, isError, error } = useGetDoctorQuery(id ?? "");
+  const { data, isLoading, isError, error, refetch } = useGetDoctorQuery(id ?? "");
   const [addReview, { isLoading: reviewing }] = useAddReviewMutation();
   const [tab, setTab] = useState("about");
   const [rating, setRating] = useState(5);
@@ -63,13 +66,31 @@ const DoctorDetails = () => {
 
   const submitReview = async (e: FormEvent) => {
     e.preventDefault();
-    if (!user) return navigate("/login");
+    if (!user) {
+      navigate("/login", {
+        replace: true,
+        state: { from: `${location.pathname}${location.search}` },
+      });
+      return;
+    }
     try {
       await addReview({ id: id ?? "", rating, comment }).unwrap();
       toast.success("Review published");
       setComment("");
-    } catch (err) {
-      toast.error(err?.data?.message || "Unable to submit review");
+    } catch (err: unknown) {
+      if (
+        typeof err === "object" &&
+        err !== null &&
+        "data" in err &&
+        typeof err.data === "object" &&
+        err.data !== null &&
+        "message" in err.data &&
+        typeof err.data.message === "string"
+      ) {
+        toast.error(err.data.message);
+      } else {
+        toast.error("Unable to submit review");
+      }
     }
   };
 
@@ -82,9 +103,22 @@ const DoctorDetails = () => {
   }
   if (isError || !doctor) {
     return (
-      <p className="px-4 py-10 text-center text-red-600">
-        {error?.data?.message || "Doctor not found"}
-      </p>
+      <div className="px-4 py-10 text-center">
+        <p className="text-red-600">
+          {typeof error === "object" &&
+          error !== null &&
+          "data" in error &&
+          typeof error.data === "object" &&
+          error.data !== null &&
+          "message" in error.data &&
+          typeof error.data.message === "string"
+            ? error.data.message
+            : "Doctor not found"}
+        </p>
+        <Button className="mt-4" variant="outline" onClick={() => refetch()}>
+          Retry
+        </Button>
+      </div>
     );
   }
 
@@ -177,7 +211,7 @@ const DoctorDetails = () => {
                 </select>
                 <textarea
                   required
-                  rows="4"
+                  rows={4}
                   className="w-full rounded-xl border px-4 py-3"
                   placeholder="Share how the visit went"
                   value={comment}

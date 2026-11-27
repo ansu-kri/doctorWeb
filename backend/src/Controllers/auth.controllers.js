@@ -35,8 +35,10 @@ const signup = async (req, res) => {
       return res.status(400).json({ message: "All required fields must be provided" });
     }
 
-    const allowedRoles = ["patient", "doctors"];
-    const safeRole = allowedRoles.includes(role) ? role : "patient";
+    const allowedRoles = ["patient", "doctor", "doctors"];
+    const safeRole = allowedRoles.includes(role)
+      ? (role === "doctors" ? "doctor" : role)
+      : "patient";
 
     if (password.length < 6) {
       return res.status(400).json({ message: "Password must be at least 6 characters" });
@@ -63,7 +65,7 @@ const signup = async (req, res) => {
       phone,
       bloodType,
       profilePic: req.file ? req.file.path.replace(/\\/g, "/") : "",
-      isApproved: safeRole === "doctors" ? "pending" : "approved",
+      isApproved: safeRole === "doctor" ? "pending" : "approved",
     });
 
     const savedUser = await newUser.save();
@@ -88,6 +90,7 @@ const login = async (req, res) => {
 
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
+    if (user.isActive === false) return res.status(403).json({ message: "Account is inactive" });
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });

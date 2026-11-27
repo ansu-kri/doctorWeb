@@ -162,7 +162,7 @@ const seedIfNeeded = async () => {
       await User.create({
         ...doctor,
         password: await bcrypt.hash("Doctor@12345", 10),
-        role: "doctors",
+        role: "doctor",
         phone: "9876543210",
         isApproved: "approved",
         isAvailable: true,

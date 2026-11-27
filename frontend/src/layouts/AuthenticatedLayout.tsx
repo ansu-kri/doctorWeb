@@ -1,4 +1,4 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import Navbar from "../components/Header/Navbar";
 import { getStoredUser, getToken } from "../utils/auth";
 
@@ -9,10 +9,17 @@ interface AuthenticatedLayoutProps {
 const AuthenticatedLayout = ({ roles }: AuthenticatedLayoutProps) => {
   const token = getToken();
   const user = getStoredUser();
+  const location = useLocation();
 
   // Check authentication
   if (!token || !user) {
-    return <Navigate to="/login" replace />;
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{ from: `${location.pathname}${location.search}` }}
+      />
+    );
   }
 
   // Check user role

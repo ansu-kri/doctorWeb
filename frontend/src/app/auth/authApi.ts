@@ -14,6 +14,13 @@ export interface PaginationParams extends Record<
   search?: string;
 }
 
+export interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  pages: number;
+}
+
 export interface Doctor {
   _id: string;
   fullName: string;
@@ -40,6 +47,8 @@ export interface Specialty {
   _id: string;
   name: string;
   description?: string;
+  isActive?: boolean;
+  icon?: string;
 }
 
 export interface Service {
@@ -47,6 +56,8 @@ export interface Service {
   name: string;
   description?: string;
   category?: string;
+  isActive?: boolean;
+  icon?: string;
 }
 
 export interface Appointment {
@@ -65,6 +76,7 @@ export interface Notification {
   title: string;
   message: string;
   isRead: boolean;
+  createdAt?: string;
 }
 
 export interface User {
@@ -77,6 +89,15 @@ export interface User {
   bloodType?: string;
   gender?: string;
   photo?: string;
+  password?: string;
+  specialization?: string;
+  hospital?: string;
+  location?: string;
+  ticketPrice?: number | string;
+  qualifications?: string[];
+  experiences?: string[];
+  isAvailable?: boolean;
+  isActive?: boolean;
 }
 
 export interface Stats {
@@ -87,6 +108,8 @@ export interface Stats {
   years?: number;
   trend?: Array<{ _id: string; count: number }>;
   status?: Record<string, number>;
+  recentAppointments?: Appointment[];
+  recentUsers?: User[];
 }
 
 export interface AuthResponse {
@@ -245,7 +268,7 @@ export const authApi = api.injectEndpoints({
       query: () => "/api/admin/stats",
       providesTags: ["Admin"],
     }),
-    getAdminUsers: builder.query<{ data: User[] }, PaginationParams | void>({
+    getAdminUsers: builder.query<{ data: User[]; pagination: PaginationInfo }, PaginationParams | void>({
       query: (params) => ({
         url: "/api/admin/users",
         params: params as
@@ -274,7 +297,7 @@ export const authApi = api.injectEndpoints({
       invalidatesTags: ["Admin", "Doctors"],
     }),
     getAdminAppointments: builder.query<
-      { data: Appointment[] },
+      { data: Appointment[]; pagination: PaginationInfo },
       PaginationParams | void
     >({
       query: (params) => ({

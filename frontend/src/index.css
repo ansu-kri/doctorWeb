@@ -18,6 +18,82 @@ body {
   color: #0f172a;
 }
 
+.admin-shell {
+  min-height: 100vh;
+}
+
+.admin-sidebar {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  box-sizing: border-box;
+  width: 260px;
+  height: 100vh;
+  height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  z-index: 70;
+}
+
+.admin-sidebar-scrollbar {
+  scrollbar-color: #cbd5e1 transparent;
+  scrollbar-width: thin;
+}
+
+.admin-sidebar-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-sidebar-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-sidebar-scrollbar::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #cbd5e1;
+}
+
+.admin-sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.admin-main-panel {
+  min-height: 100vh;
+}
+
+.admin-main-scroll {
+  overflow-x: hidden;
+}
+
+@media (min-width: 1024px) {
+  .admin-sidebar-collapsed {
+    width: 76px;
+  }
+
+  .admin-shell {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .admin-main-panel {
+    display: flex;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .admin-main-scroll {
+    min-height: 0;
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+  }
+}
+
 a {
   color: inherit;
 }

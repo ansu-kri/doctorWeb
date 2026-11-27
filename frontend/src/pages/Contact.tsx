@@ -1,4 +1,5 @@
-import { useState, ChangeEvent, FormEvent } from "react";
+import { useState } from "react";
+import type { ChangeEvent, FormEvent } from "react";
 import { toast } from "sonner";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";

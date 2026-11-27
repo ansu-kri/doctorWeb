@@ -1,4 +1,5 @@
-import { useState, ChangeEvent } from "react";
+import { useState } from "react";
+import type { ChangeEvent } from "react";
 
 interface Qualification {
   startDate: string;

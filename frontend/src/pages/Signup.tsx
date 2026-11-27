@@ -1,4 +1,5 @@
-import { useState, ChangeEvent, FormEvent } from "react";
+import { useState } from "react";
+import type { ChangeEvent, FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
@@ -68,7 +69,8 @@ export default function Signup() {
       const response = await signup(payload).unwrap();
       saveSession(response);
       toast.success("Account created");
-      navigate("/dashboard");
+      if (form.role === "patient") navigate("/dashboard");
+      else navigate("/doctor/dashboard");
     } catch (error: unknown) {
       toast.error(getErrorMessage(error));
     }
@@ -151,7 +153,7 @@ export default function Signup() {
                 onChange={handleChange}
               >
                 <option value="patient">Patient</option>
-                <option value="doctors">Doctor</option>
+                <option value="doctor">Doctor</option>
               </select>
             </Field>
             <Field label="Gender">

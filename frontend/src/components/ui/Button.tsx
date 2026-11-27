@@ -1,4 +1,4 @@
-import { ButtonHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 const variants = {
   primary: "bg-[#2563EB] text-white hover:bg-blue-700 shadow-sm",
@@ -9,7 +9,7 @@ const variants = {
 };
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
   variant?: keyof typeof variants;
   type?: "button" | "submit" | "reset";

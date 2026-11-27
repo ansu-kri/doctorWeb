@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import PublicLayout from "../layouts/Layouts";
 import AuthLayout from "../layouts/AuthLayout";
 import AuthenticatedLayout from "../layouts/AuthenticatedLayout";
+import AdminLayout from "../layouts/AdminLayout";
 
 const Home = React.lazy(() => import("../pages/Home"));
 const Login = React.lazy(() => import("../pages/Login"));
@@ -13,7 +14,13 @@ const Doctors = React.lazy(() => import("../pages/Doctors/Docters"));
 const Profile = React.lazy(() => import("../pages/User/Profile"));
 const DoctorDetails = React.lazy(() => import("../pages/Doctors/DoctorDetails"));
 const CheckoutSuccess = React.lazy(() => import("../pages/CheckoutSuccess"));
-const AdminProfile = React.lazy(() => import("../pages/Admin/AdminProfile"));
+const AdminSection = React.lazy(() => import("../pages/Admin/AdminProfile"));
+const AdminAccount = React.lazy(() => import("../pages/Admin/AdminAccount"));
+const AdminNotifications = React.lazy(() => import("../pages/Admin/AdminNotifications"));
+const AdminReports = React.lazy(() => import("../pages/Admin/AdminReports"));
+const AdminSettings = React.lazy(() => import("../pages/Admin/AdminSettings"));
+const Unauthorized = React.lazy(() => import("../pages/Unauthorized"));
+const NotFound = React.lazy(() => import("../pages/NotFound"));
 const BookAppointment = React.lazy(() => import("../pages/BookAppointment"));
 
 const withSuspense = (Component: React.ComponentType<{}> ) => (
@@ -35,8 +42,6 @@ export const router = createBrowserRouter([
       { path: "doctors", element: withSuspense(Doctors) },
       { path: "doctors/:id", element: withSuspense(DoctorDetails) },
       { path: "doctor/:id", element: withSuspense(DoctorDetails) },
-      { path: "book", element: withSuspense(BookAppointment) },
-      { path: "book/:id", element: withSuspense(BookAppointment) },
       { path: "checkout-success", element: withSuspense(CheckoutSuccess) },
     ],
   },
@@ -55,10 +60,31 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    element: <AuthenticatedLayout roles={["admin"]} />,
+    element: <AuthenticatedLayout roles={["patient", "doctor", "doctors"]} />,
     children: [
-      { path: "admin", element: withSuspense(AdminProfile) },
-      { path: "profile", element: <Navigate to="/admin" replace /> },
+      { path: "book", element: withSuspense(BookAppointment) },
+      { path: "book/:id", element: withSuspense(BookAppointment) },
     ],
   },
+  {
+    path: "/admin",
+    element: <AdminLayout />,
+    children: [
+      { index: true, element: <Navigate to="/admin/dashboard" replace /> },
+      { path: "dashboard", element: withSuspense(AdminSection) },
+      { path: "doctors", element: withSuspense(AdminSection) },
+      { path: "patients", element: withSuspense(AdminSection) },
+      { path: "appointments", element: withSuspense(AdminSection) },
+      { path: "specialties", element: withSuspense(AdminSection) },
+      { path: "services", element: withSuspense(AdminSection) },
+      { path: "profile", element: withSuspense(AdminAccount) },
+      { path: "profile/settings", element: withSuspense(AdminAccount) },
+      { path: "notifications", element: withSuspense(AdminNotifications) },
+      { path: "reports", element: withSuspense(AdminReports) },
+      { path: "settings", element: withSuspense(AdminSettings) },
+      { path: "*", element: withSuspense(NotFound) },
+    ],
+  },
+  { path: "/unauthorized", element: withSuspense(Unauthorized) },
+  { path: "*", element: withSuspense(NotFound) },
 ]);

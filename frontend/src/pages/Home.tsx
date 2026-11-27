@@ -10,7 +10,6 @@ import {
   FaUserMd,
   FaHeartbeat,
   FaHospital,
-  FaQuoteLeft,
 } from "react-icons/fa";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
@@ -36,8 +35,6 @@ interface QueryState {
 interface Stats {
   doctors: number;
   patients: number;
-  satisfaction: number;
-  years: number;
 }
 interface Feature {
   Icon: ComponentType<{ className?: string }>;
@@ -71,8 +68,6 @@ const Home = () => {
   const stats: Stats = {
     doctors: statsData?.data?.doctors ?? 0,
     patients: statsData?.data?.patients ?? 0,
-    satisfaction: statsData?.data?.satisfaction ?? 98,
-    years: statsData?.data?.years ?? 12,
   };
 
   // Featured Doctors
@@ -92,16 +87,12 @@ const Home = () => {
   // Statistics Data
   const statistics: Statistic[] = [
     {
-      value: `${stats.years}+`,
-      label: "Years of care",
-    },
-    {
       value: `${stats.doctors}+`,
       label: "Specialists",
     },
     {
-      value: `${stats.satisfaction}%`,
-      label: "Patient trust",
+      value: `${stats.patients}+`,
+      label: "Patients",
     },
   ];
   // Why Choose Medicare Features
@@ -119,28 +110,6 @@ const Home = () => {
       text: "Coordinated diagnostics, referrals, and appointment records.",
     },
   ];
-  // Patient Testimonials
-  const testimonials = [
-    {
-      name: "Neha Kapoor",
-      tag: "Cardiology",
-      quote:
-        "Booking took two minutes and Dr. Sharma explained my reports without rushing.",
-    },
-    {
-      name: "Imran Ali",
-      tag: "Neurology",
-      quote:
-        "I rescheduled from the dashboard when traffic hit. The new slot was confirmed immediately.",
-    },
-    {
-      name: "Leela Menon",
-      tag: "Pediatrics",
-      quote:
-        "The pediatric visit felt calm, and vaccination dates now live in my history.",
-    },
-  ];
-
   return (
     <div>
       <section className="bg-white">
@@ -330,21 +299,6 @@ const Home = () => {
               ))}
             </div>
           </div>
-        </div>
-      </section>
-      <section className="mx-auto max-w-7xl px-4 py-16">
-        <h2 className="text-center text-3xl font-semibold">
-          What patients say
-        </h2>
-        <div className="mt-10 grid gap-5 md:grid-cols-3">
-          {testimonials.map(({ name, tag, quote }) => (
-            <Card key={name} className="p-6">
-              <FaQuoteLeft className="text-blue-200" />
-              <p className="mt-4 text-slate-600">{quote}</p>
-              <p className="mt-5 font-semibold">{name}</p>
-              <p className="text-sm text-slate-400">{tag} patient</p>
-            </Card>
-          ))}
         </div>
       </section>
       <section className="px-4 pb-16">
