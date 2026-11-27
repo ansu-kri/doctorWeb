@@ -105,3 +105,54 @@ Backend
 cd backend
 npm install
 npm run dev
+
+## Docker deployment
+
+The backend uses the existing `MONGO_URL` Atlas connection string; Compose does
+not start a MongoDB container. Uploads are stored in Cloudinary. The backend
+service is only exposed inside the Compose network, and Nginx serves the
+frontend while proxying `/api` and legacy `/uploads` requests to it.
+
+On Windows PowerShell, create a private Compose environment file and populate
+it with the existing backend settings:
+
+```powershell
+Copy-Item .env.example .env
+notepad .env
+```
+
+Set `MONGO_URL`, `JWT_SECRET`, and the three backend Cloudinary values. Keep
+`.env` private and never use `VITE_` variables for secrets. For local access,
+keep `FRONTEND_URL=http://localhost:8080` and `FRONTEND_PORT=8080`.
+
+Build and start both containers:
+
+```powershell
+docker compose up --build -d
+docker compose ps
+```
+
+Verify the served frontend and proxied backend health endpoint with real HTTP
+requests:
+
+```powershell
+(Invoke-WebRequest -UseBasicParsing http://localhost:8080).StatusCode
+(Invoke-WebRequest -UseBasicParsing http://localhost:8080/api/health).Content
+```
+
+View container logs (press `Ctrl+C` to stop following them):
+
+```powershell
+docker compose logs -f backend frontend
+```
+
+Stop and remove the containers:
+
+```powershell
+docker compose down
+```
+
+Both services have health checks and `unless-stopped` restart policies. The
+backend image includes the existing legacy `uploads` assets read-only; new
+images are stored in Cloudinary, so no local upload volume or MongoDB volume is
+required.

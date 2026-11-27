@@ -1,4 +1,6 @@
-const ASSET_URL = import.meta.env.VITE_ASSET_URL || "http://localhost:5000";
+const ASSET_URL =
+  import.meta.env.VITE_ASSET_URL ??
+  (import.meta.env.DEV ? "http://localhost:5000" : "");
 
 export const mediaUrl = (path: string | null | undefined): string => {
   if (!path) return "";

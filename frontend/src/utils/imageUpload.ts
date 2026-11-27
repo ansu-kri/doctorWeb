@@ -1,4 +1,6 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL =
+  import.meta.env.VITE_API_URL ??
+  (import.meta.env.DEV ? "http://localhost:5000" : "");
 
 export const MAX_IMAGE_SIZE_BYTES = 2 * 1024 * 1024;
 const allowedImageTypes = new Set([
