@@ -113,7 +113,7 @@ const updateAppointmentStatus = async (req, res) => {
       return res.status(403).json({ message: "Forbidden" });
     }
 
-    const { status, appointmentDate, timeSlot } = req.body;
+    const { status, appointmentDate, timeSlot, rejectionReason } = req.body;
 
     if (status === "cancelled") {
       booking.status = "cancelled";
@@ -132,6 +132,18 @@ const updateAppointmentStatus = async (req, res) => {
       booking.status = "confirmed";
     } else if (status && isAdmin) {
       booking.status = status;
+    } else if (status && isDoctor) {
+      // Doctor-only status transitions
+      if (booking.status === "pending" && status === "confirmed") {
+        booking.status = "confirmed";
+      } else if (booking.status === "pending" && status === "cancelled") {
+        booking.status = "cancelled";
+        if (rejectionReason) booking.notes = (booking.notes || "") + (booking.notes ? " | " : "") + `Rejection reason: ${rejectionReason}`;
+      } else if (booking.status === "confirmed" && status === "completed") {
+        booking.status = "completed";
+      } else {
+        return res.status(400).json({ message: `Cannot transition from ${booking.status} to ${status}` });
+      }
     } else {
       return res.status(400).json({ message: "Invalid update" });
     }

@@ -4,6 +4,7 @@ import PublicLayout from "../layouts/Layouts";
 import AuthLayout from "../layouts/AuthLayout";
 import AuthenticatedLayout from "../layouts/AuthenticatedLayout";
 import AdminLayout from "../layouts/AdminLayout";
+import DoctorLayout from "../layouts/DoctorLayout";
 
 const Home = React.lazy(() => import("../pages/Home"));
 const Login = React.lazy(() => import("../pages/Login"));
@@ -22,6 +23,12 @@ const AdminSettings = React.lazy(() => import("../pages/Admin/AdminSettings"));
 const Unauthorized = React.lazy(() => import("../pages/Unauthorized"));
 const NotFound = React.lazy(() => import("../pages/NotFound"));
 const BookAppointment = React.lazy(() => import("../pages/BookAppointment"));
+const DoctorDashboard = React.lazy(() => import("../pages/Doctor/Dashboard"));
+const DoctorAppointments = React.lazy(() => import("../pages/Doctor/Appointments"));
+const DoctorPatients = React.lazy(() => import("../pages/Doctor/Patients"));
+const DoctorAvailability = React.lazy(() => import("../pages/Doctor/Availability"));
+const DoctorProfile = React.lazy(() => import("../pages/Doctor/Profile"));
+const DoctorSettings = React.lazy(() => import("../pages/Doctor/Settings"));
 
 const withSuspense = (Component: React.ComponentType<{}> ) => (
   <Suspense fallback={<div className="py-20 text-center text-slate-500">Loading...</div>}>
@@ -66,6 +73,44 @@ export const router = createBrowserRouter([
       { path: "book/:id", element: withSuspense(BookAppointment) },
     ],
   },
+  {
+  path: "/doctor",
+  element: <DoctorLayout />,
+  children: [
+    {
+      index: true,
+      element: <Navigate to="/doctor/dashboard" replace />,
+    },
+    {
+      path: "dashboard",
+      element: withSuspense(DoctorDashboard),
+    },
+    {
+      path: "appointments",
+      element: withSuspense(DoctorAppointments),
+    },
+    {
+      path: "patients",
+      element: withSuspense(DoctorPatients),
+    },
+    {
+      path: "availability",
+      element: withSuspense(DoctorAvailability),
+    },
+    {
+      path: "profile",
+      element: withSuspense(DoctorProfile),
+    },
+    {
+      path: "settings",
+      element: withSuspense(DoctorSettings),
+    },
+    {
+      path: "*",
+      element: withSuspense(NotFound),
+    },
+  ],
+},
   {
     path: "/admin",
     element: <AdminLayout />,

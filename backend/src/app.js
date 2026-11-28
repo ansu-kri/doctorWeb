@@ -17,26 +17,41 @@ const allowedOrigins = [
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
+// CORS configuration
 app.use(
   cors({
     origin: function (origin, callback) {
       if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
       return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
   })
 );
 
+// Body parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// Legacy files remain read-only until the Cloudinary migration has been reviewed.
-app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 
+// Legacy uploads (read-only)
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "..", "uploads"))
+);
+
+// Health check
 app.get("/api/health", (req, res) => {
-  res.json({ ok: true });
+  res.status(200).json({
+    success: true,
+    message: "Doctor application API is running",
+  });
 });
 
+// API routes
 app.use("/api", authRoutes);
 app.use("/api", doctorsRoutes);
 app.use("/api", bookingRoutes);

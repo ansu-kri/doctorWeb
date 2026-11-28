@@ -69,6 +69,16 @@ export interface Appointment {
   status: string;
   ticketPrice: number | string;
   patientName?: string;
+  user?: {
+    _id: string;
+    fullName: string;
+    email: string;
+    phone?: string;
+    profilePic?: string;
+    gender?: string;
+  };
+  notes?: string;
+  rejectionReason?: string;
 }
 
 export interface Notification {
@@ -125,6 +135,34 @@ export interface AuthResponse {
   role?: string;
   [key: string]: unknown;
   message?: string;
+}
+
+export interface DoctorStats {
+  totalPatients: number;
+  todaysAppointments: number;
+  upcomingAppointments: number;
+  pendingRequests: number;
+  completedAppointments: number;
+  cancelledAppointments: number;
+  todaysAppointmentsList: Appointment[];
+}
+
+export interface DoctorAvailability {
+  timeSlots: Array<{ day: string; startTime: string; endTime: string }>;
+  isAvailable: boolean;
+  isApproved: string;
+}
+
+export interface DoctorPatient {
+  _id: string;
+  fullName: string;
+  email: string;
+  phone?: string;
+  profilePic?: string;
+  gender?: string;
+  totalAppointments: number;
+  statuses: string[];
+  lastAppointment: string;
 }
 
 export interface ContactForm {
@@ -223,6 +261,56 @@ export const authApi = api.injectEndpoints({
         url: `/api/doctors/${id}/availability`,
         params: { date },
       }),
+    }),
+    getDoctorStats: builder.query<{ data: DoctorStats }, void>({
+      query: () => "/api/doctor/stats",
+      providesTags: ["Appointments"],
+    }),
+    getDoctorAppointments: builder.query<
+      { data: Appointment[]; pagination: PaginationInfo },
+      PaginationParams | void
+    >({
+      query: (params) => ({
+        url: "/api/doctor/appointments",
+        params: params as Record<string, string | number | undefined> | undefined,
+      }),
+      providesTags: ["Appointments"],
+    }),
+    getDoctorPatients: builder.query<
+      { data: DoctorPatient[]; pagination: PaginationInfo },
+      PaginationParams | void
+    >({
+      query: (params) => ({
+        url: "/api/doctor/patients",
+        params: params as Record<string, string | number | undefined> | undefined,
+      }),
+      providesTags: ["Appointments"],
+    }),
+    getDoctorAvailability: builder.query<{ data: DoctorAvailability }, void>({
+      query: () => "/api/doctor/availability",
+      providesTags: ["Auth"],
+    }),
+    updateDoctorAvailability: builder.mutation<
+      { data: DoctorAvailability },
+      Partial<DoctorAvailability>
+    >({
+      query: (body) => ({
+        url: "/api/doctor/availability",
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: ["Auth"],
+    }),
+    updateDoctorProfile: builder.mutation<
+      UpdateProfileResponse,
+      FormData
+    >({
+      query: (formData) => ({
+        url: "/api/doctor/profile",
+        method: "PATCH",
+        body: formData,
+      }),
+      invalidatesTags: ["Auth"],
     }),
     addReview: builder.mutation<
       void,
@@ -389,6 +477,12 @@ export const {
   useGetDoctorQuery,
   useGetAvailabilityQuery,
   useAddReviewMutation,
+  useGetDoctorStatsQuery,
+  useGetDoctorAppointmentsQuery,
+  useGetDoctorPatientsQuery,
+  useGetDoctorAvailabilityQuery,
+  useUpdateDoctorAvailabilityMutation,
+  useUpdateDoctorProfileMutation,
   useGetSpecialtiesQuery,
   useGetServicesQuery,
   useGetPublicStatsQuery,
